@@ -150,6 +150,7 @@ public:
     void billAccAccept(void);
     void billAccReject(void);
     void bv20UpdateFirmware(void);
+    void billReqCurrencyRev(void);
     QTimer billReadBuffTimer;
 private:
 

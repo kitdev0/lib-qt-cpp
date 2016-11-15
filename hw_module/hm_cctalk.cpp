@@ -191,6 +191,28 @@ void HM_CCTALK::routeBill(ccTalkAddressType slave,bool dir)
     sendSimplePacket();
 }
 
+void HM_CCTALK::reqSoftwareRev(ccTalkAddressType slave)
+{
+    SPacket.Dest_Adds = slave;
+    SPacket.No_Data = 0;
+    SPacket.Soure_Adds = ADDR_MASTER;
+    SPacket.Hearder = REQ_SOFTWARE_REVISION;
+    SPacket.ChSum = calSimpleChSum(SPacket.Dest_Adds+SPacket.No_Data+SPacket.Soure_Adds+SPacket.Hearder);
+    debug("reqSoftwareRev. addr. >> " + QString("%1").arg((int)slave ,0 ,10));
+    sendSimplePacket();
+}
+
+void HM_CCTALK::reqCurrencyRev(ccTalkAddressType slave)
+{
+    SPacket.Dest_Adds = slave;
+    SPacket.No_Data = 0;
+    SPacket.Soure_Adds = ADDR_MASTER;
+    SPacket.Hearder = REQ_CURRENCY_REVISION;
+    SPacket.ChSum = calSimpleChSum(SPacket.Dest_Adds+SPacket.No_Data+SPacket.Soure_Adds+SPacket.Hearder);
+    debug("reqCurrentRev. addr. >> " + QString("%1").arg((int)slave ,0 ,10));
+    sendSimplePacket();
+}
+
 void HM_CCTALK::resetDevice(ccTalkAddressType slave)
 {
     SPacket.Dest_Adds = slave;
@@ -271,7 +293,7 @@ void HM_CCTALK::writeData(QByteArray data, u_int8_t size)
     for (int i = 0; i < size; i++) {
         str += QString("%1 ").arg((u_int8_t)data[i] ,0 ,10);
     }
-    //debug("send packet >> " + str);
+    debug("send packet >> " + str);
 
     reflect_data_size = size;
     if((u_int8_t)data[0] == ADDR_COIN){
@@ -420,26 +442,68 @@ void HM_CCTALK::checkCoinPacketData(QByteArray packet_data)
     }
 }
 
+//void HM_CCTALK::checkBillPacketData(QByteArray packet_data)
+//{
+//    if(lastBillHead_send == READ_BUFFER_BILL_EVENT)
+//    {
+//        /*
+//        if((uint8_t)packet_data[6] == 1)
+//        {
+//            if(event_Bill != (uint8_t)packet_data[4]){
+//                emit signalBillVerify((uint8_t)packet_data[5]);
+//                qDebug() << "emit signalBillVerify";
+//            }
+//            if((uint8_t)packet_data[5] != 0){
+//                if(event_Bill != (uint8_t)packet_data[4]){
+//                    emit signalBillAccepted((uint8_t)packet_data[5]);
+//                    event_Bill = (uint8_t)packet_data[4];
+//                    qDebug() << "signalBillAccepted";
+//                }
+//            }
+//        }
+//        */
+//        if(event_Bill != (uint8_t)packet_data[4])
+//        {
+//            if((uint8_t)packet_data[5] != 0)
+//            {
+//                if((uint8_t)packet_data[6] == 1){
+//                    emit signalBillVerify((uint8_t)packet_data[5]);
+//                    debug("emit signalBillVerify");
+//                }
+//                else if((uint8_t)packet_data[6] == 0){
+//                    emit signalBillAccepted((uint8_t)packet_data[5]);
+//                    debug("emit signalBillAccepted");
+//                }
+//            }
+//            event_Bill = (uint8_t)packet_data[4];
+//        }
+
+//    }
+//    else if(lastBillHead_send == PERFORM_SELF_CHECK){
+//        if((uint8_t)packet_data[4] == 0)
+//            debug("Bill-Self-Check -> OK");
+//        else{
+//            debug("Bill-Self-Check -> ERROR-Code = " + QString("%1").arg((int)packet_data[4] ,0 ,10));
+//            emit signalBillSelfCheckError((uint8_t)packet_data[4]);
+//        }
+//    }
+//    else
+//        debug("!!warning - Received BillData don't diagnose");
+//}
+
 void HM_CCTALK::checkBillPacketData(QByteArray packet_data)
 {
-    if(lastBillHead_send == READ_BUFFER_BILL_EVENT)
+    QString _str = "";
+
+    switch (lastBillHead_send)
     {
-        /*
-        if((uint8_t)packet_data[6] == 1)
-        {
-            if(event_Bill != (uint8_t)packet_data[4]){
-                emit signalBillVerify((uint8_t)packet_data[5]);
-                qDebug() << "emit signalBillVerify";
-            }
-            if((uint8_t)packet_data[5] != 0){
-                if(event_Bill != (uint8_t)packet_data[4]){
-                    emit signalBillAccepted((uint8_t)packet_data[5]);
-                    event_Bill = (uint8_t)packet_data[4];
-                    qDebug() << "signalBillAccepted";
-                }
-            }
-        }
-        */
+    case REQ_SOFTWARE_REVISION :
+        break;
+    case REQ_CURRENCY_REVISION :
+        _str = _str.mid(4,(int)packet_data[1]);
+        debug("Currency Rev. = " + _str);
+        break;
+    case READ_BUFFER_BILL_EVENT :
         if(event_Bill != (uint8_t)packet_data[4])
         {
             if((uint8_t)packet_data[5] != 0)
@@ -455,18 +519,20 @@ void HM_CCTALK::checkBillPacketData(QByteArray packet_data)
             }
             event_Bill = (uint8_t)packet_data[4];
         }
+        break;
 
-    }
-    else if(lastBillHead_send == PERFORM_SELF_CHECK){
+    case PERFORM_SELF_CHECK:
         if((uint8_t)packet_data[4] == 0)
             debug("Bill-Self-Check -> OK");
         else{
             debug("Bill-Self-Check -> ERROR-Code = " + QString("%1").arg((int)packet_data[4] ,0 ,10));
             emit signalBillSelfCheckError((uint8_t)packet_data[4]);
         }
-    }
-    else
+        break;
+    default:
         debug("!!warning - Received BillData don't diagnose");
+        break;
+    }
 }
 //private//
 

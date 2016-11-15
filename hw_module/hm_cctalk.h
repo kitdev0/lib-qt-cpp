@@ -239,6 +239,8 @@ public:
     void readBufEvent(ccTalkAddressType slave);
     void resetDevice(ccTalkAddressType slave);
     void routeBill(ccTalkAddressType slave,bool dir);
+    void reqSoftwareRev(ccTalkAddressType slave);
+    void reqCurrencyRev(ccTalkAddressType slave);
     bool connectState();
     bool readyToSend();
     void closePort();

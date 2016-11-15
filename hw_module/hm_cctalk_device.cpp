@@ -434,6 +434,11 @@ void HM_CCTALK_DEVICE::bv20UpdateFirmware()
     debug("billAcc >> Update firmware");
 }
 
+void HM_CCTALK_DEVICE::billReqCurrencyRev()
+{
+    ccTalk->reqCurrencyRev(ADDR_BILL);
+}
+
 //slot
 void HM_CCTALK_DEVICE::slotReadBillBuffer(void)
 {
@@ -553,10 +558,9 @@ void HM_CCTALK_DEVICE::slotSetBillConnectState()
     disconnect(ccTalk,SIGNAL(signalReceiveFromBill_ACK()),this,SLOT(slotSetBillConnectState()));
     debug("Bill Acc. Connection >> OK\r\n");
     _tryConnectNo = _TRY_CONNECT_NO;
-    //QTimer::singleShot(BILL_INTERVAL_TM,this,SLOT(slotResetBill()));
-    QTimer::singleShot(_BILL_INTERVAL_TM,this,SLOT(slotSetBillMaster_ON()));
-    QTimer::singleShot(_BILL_INTERVAL_TM*2,this,SLOT(slotEnableBill()));
-    QTimer::singleShot(_BILL_INTERVAL_TM*3,this,SLOT(slotStartReadBillBufTimer()));
+//    QTimer::singleShot(_BILL_INTERVAL_TM,this,SLOT(slotSetBillMaster_ON()));
+//    QTimer::singleShot(_BILL_INTERVAL_TM*2,this,SLOT(slotEnableBill()));
+//    QTimer::singleShot(_BILL_INTERVAL_TM*3,this,SLOT(slotStartReadBillBufTimer()));
     emit signalBillAccConnected();
 }
 
