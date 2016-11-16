@@ -43,7 +43,7 @@
 #endif
 
 #ifndef _OSX_SERIAL_PORT_DEVICE
-#define _OSX_SERIAL_PORT_DEVICE         "tty.usbserial"
+#define _OSX_SERIAL_PORT_DEVICE    "tty.usbserial"
 #endif
 
 #ifndef _RPI_USB_SERIAL_PORT_DEVICE
@@ -85,7 +85,7 @@ public:
 
 #if defined(_COIN_ADDR) || defined(_BILL_ADDR)
 public:
-    void connectDevice(void);
+    bool connectDevice(bool _wait_return);
     void disconnectDevice(void);
     void firmwarePath(QString _path);
 private:
@@ -112,9 +112,9 @@ public:
     bool flagPortOpen = false;
 
     void debug(QString data);
+    bool tryToConnectDevice();
 
 private slots:
-    void slotLogDebugSay(QString);
     void slotDetectPort();
     void slotDeviceTimeout();
 signals:
@@ -145,13 +145,18 @@ signals:
 
 #ifdef _BILL_ADDR
 public:
+    QTimer billReadBuffTimer;
     void billAccEnable(void);
     void billAccDisable(void);
     void billAccAccept(void);
     void billAccReject(void);
-    void bv20UpdateFirmware(void);
-    void billReqCurrencyRev(void);
-    QTimer billReadBuffTimer;
+    bool bv20UpdateFirmware(void);
+    QString billReqCurrencyRev(void);
+    QString billReqSoftwareRev();
+    bool checkFirmwareFileExist(QString _path_file);
+    bool readFirmwareFile(QString _path_file);
+public slots:
+    void slotBV20UpdateFirmware(void);
 private:
 
 private slots:

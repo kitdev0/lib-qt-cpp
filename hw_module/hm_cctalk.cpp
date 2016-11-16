@@ -36,7 +36,6 @@ HM_CCTALK::HM_CCTALK(QObject *parent) :
     //connect(&polling_timer,SIGNAL(timeout()),this,SLOT(slotSendPacket()));
     connect(timeOut_timer,SIGNAL(timeout()),this,SLOT(slotTimeOut()));
     connect(this,SIGNAL(signalReceivedPacket(QByteArray)),this,SLOT(slotChReceivePacket(QByteArray)));
-    connect(logDebug,SIGNAL(signalSay(QString)),this,SLOT(slotLogDebugSay(QString)));
 }
 
 HM_CCTALK::~HM_CCTALK()
@@ -77,7 +76,7 @@ bool HM_CCTALK::init(QString serial_port)
         return false;
 }
 
-void HM_CCTALK::simplePoll(ccTalkAddressType slave)
+bool HM_CCTALK::simplePoll(ccTalkAddressType slave, bool _wait_return)
 {
     SPacket.Dest_Adds = slave;
     SPacket.No_Data = 0;
@@ -86,6 +85,20 @@ void HM_CCTALK::simplePoll(ccTalkAddressType slave)
     SPacket.ChSum = calSimpleChSum(SPacket.Dest_Adds+SPacket.No_Data+SPacket.Soure_Adds+SPacket.Hearder);
     debug("simplePoll addr. >> " + QString("%1").arg((int)slave ,0 ,10));
     sendSimplePacket();
+    while(_wait_return)
+    {
+        if(flag_received_error != 0)
+            return 0;
+        if(flag_received_ack)
+            return 1;
+        if(flag_received_nack)
+            return 0;
+        if(!ccTalkPort->waitForReadyRead(_CCTALK_RETURN_PACKET_TIMEOUT)){
+            debug("Response timeout!!");
+            break;
+        }
+    }
+    return 0;
 }
 
 void HM_CCTALK::selfCheck(ccTalkAddressType slave)
@@ -191,7 +204,7 @@ void HM_CCTALK::routeBill(ccTalkAddressType slave,bool dir)
     sendSimplePacket();
 }
 
-void HM_CCTALK::reqSoftwareRev(ccTalkAddressType slave)
+QString HM_CCTALK::reqSoftwareRev(ccTalkAddressType slave, bool _wait_return)
 {
     SPacket.Dest_Adds = slave;
     SPacket.No_Data = 0;
@@ -200,9 +213,25 @@ void HM_CCTALK::reqSoftwareRev(ccTalkAddressType slave)
     SPacket.ChSum = calSimpleChSum(SPacket.Dest_Adds+SPacket.No_Data+SPacket.Soure_Adds+SPacket.Hearder);
     debug("reqSoftwareRev. addr. >> " + QString("%1").arg((int)slave ,0 ,10));
     sendSimplePacket();
+    software_rev = "";
+    while(_wait_return)
+    {
+        if(flag_received_error != 0)
+            return "";
+        if(flag_received_nack)
+            return "";
+        if(software_rev.size() > 0)
+            return software_rev;
+        if(!ccTalkPort->waitForReadyRead(_CCTALK_RETURN_PACKET_TIMEOUT)){
+            debug("Response timeout!!");
+            break;
+        }
+    }
+    return "";
+    return "";
 }
 
-void HM_CCTALK::reqCurrencyRev(ccTalkAddressType slave)
+QString HM_CCTALK::reqCurrencyRev(ccTalkAddressType slave,bool _wait_return)
 {
     SPacket.Dest_Adds = slave;
     SPacket.No_Data = 0;
@@ -211,6 +240,22 @@ void HM_CCTALK::reqCurrencyRev(ccTalkAddressType slave)
     SPacket.ChSum = calSimpleChSum(SPacket.Dest_Adds+SPacket.No_Data+SPacket.Soure_Adds+SPacket.Hearder);
     debug("reqCurrentRev. addr. >> " + QString("%1").arg((int)slave ,0 ,10));
     sendSimplePacket();
+
+    currency_rev = "";
+    while(_wait_return)
+    {
+        if(flag_received_error != 0)
+            return "";
+        if(flag_received_nack)
+            return "";
+        if(currency_rev.size() > 0)
+            return currency_rev;
+        if(!ccTalkPort->waitForReadyRead(_CCTALK_RETURN_PACKET_TIMEOUT)){
+            debug("Response timeout!!");
+            break;
+        }
+    }
+    return "";
 }
 
 void HM_CCTALK::resetDevice(ccTalkAddressType slave)
@@ -287,24 +332,26 @@ bool HM_CCTALK::moduleInit(QString port_name)
     }
 }
 
-void HM_CCTALK::writeData(QByteArray data, u_int8_t size)
+void HM_CCTALK::writeData(QByteArray data, uint8_t size)
 {
     QString str;
     for (int i = 0; i < size; i++) {
-        str += QString("%1 ").arg((u_int8_t)data[i] ,0 ,10);
+        str += QString("%1 ").arg((uint8_t)data[i] ,0 ,10);
     }
     debug("send packet >> " + str);
 
     reflect_data_size = size;
-    if((u_int8_t)data[0] == ADDR_COIN){
-        lastCoinHead_send = (u_int8_t)data[3];
+    if((uint8_t)data[0] == ADDR_COIN){
+        lastCoinHead_send = (uint8_t)data[3];
     }
-    else if((u_int8_t)data[0] == ADDR_BILL)
-        lastBillHead_send = (u_int8_t)data[3];
+    else if((uint8_t)data[0] == ADDR_BILL)
+        lastBillHead_send = (uint8_t)data[3];
     if(ccTalkPort->isWritable()){
-        ccTalkPort->write(data, size);
+        ccTalkPort->write(data.constData(), size);
+        if(ccTalkPort->bytesToWrite() > 0)
+            ccTalkPort->flush();
         while(!ccTalkPort->atEnd());
-        if(!timeOut_timer->isActive()) timeOut_timer->start(_CCTALK_RESTURN_PACKET_TIMEOUT);
+        if(!timeOut_timer->isActive()) timeOut_timer->start(_CCTALK_RETURN_PACKET_TIMEOUT);
     }
     else
         debug("cannot write data");
@@ -318,6 +365,10 @@ char HM_CCTALK::calSimpleChSum(char raw)
 
 void HM_CCTALK::sendSimplePacket()
 {
+    flag_received_ack = false;
+    flag_received_error = 0;
+    flag_received_nack = false;
+
     if (flagReadyToSend == true){
         flagReadyToSend = false;
         QByteArray packet_buf;
@@ -334,8 +385,8 @@ void HM_CCTALK::sendSimplePacket()
         //send_packet_buf.append(packet_buf,i);
         writeData(packet_buf,packet_buf.size());
     }
-    //else
-        //debug("!!Error data sending!!");
+//    else
+//        debug("!!Error data sending!!");
 }
 
 void HM_CCTALK::recordData(QByteArray data)
@@ -401,11 +452,15 @@ void HM_CCTALK::checkPacketFormat(QByteArray packet)
     if((int)packet[0] == ADDR_MASTER){
         if(simpleChSum(packet))
             emit signalReceivedPacket(packet);
-        else
+        else{
+            flag_received_error = -1;
             debug("error Packet ChSum is wrong !!");
+        }
     }
-    else
+    else{
+        flag_received_error = -2;
         debug("error ADDR_MASTER is wrong !!");
+    }
 }
 
 void HM_CCTALK::checkCoinPacketData(QByteArray packet_data)
@@ -498,10 +553,18 @@ void HM_CCTALK::checkBillPacketData(QByteArray packet_data)
     switch (lastBillHead_send)
     {
     case REQ_SOFTWARE_REVISION :
+        for(int i = 4;i < packet_data.size() - 1 ;i++){
+            _str += QString("%1").arg(packet_data[i]);
+        }
+        software_rev = _str;
+        //debug("Software Rev. = " + QString(_str));
         break;
     case REQ_CURRENCY_REVISION :
-        _str = _str.mid(4,(int)packet_data[1]);
-        debug("Currency Rev. = " + _str);
+        for(int i = 4;i < packet_data.size() - 1 ;i++){
+            _str += QString("%1").arg(packet_data[i]);
+        }
+        currency_rev = _str;
+        //debug("Currency Rev. = " + QString(_str));
         break;
     case READ_BUFFER_BILL_EVENT :
         if(event_Bill != (uint8_t)packet_data[4])
@@ -551,13 +614,14 @@ void HM_CCTALK::slotReadyRead()
 //        str += QString("%1 ").arg((u_int8_t)read_buf[i] ,0 ,10);
 //    }
 
-//    logDebug->Print("read data >> " + str);
+//    debug("read data >> " + str);
     recordData(read_buf);
-
 }
 
 void HM_CCTALK::slotChReceivePacket(QByteArray return_packet)
 {
+    flagReadyToSend = true;
+
     if((int)return_packet[2] == ADDR_COIN)
     {
         if((int)return_packet[1]){ //data > 0
@@ -565,14 +629,18 @@ void HM_CCTALK::slotChReceivePacket(QByteArray return_packet)
         }
         else if((int)return_packet[3] == 0){
             //debug("ReceiveFromCoin - ACKED...");
+            flag_received_ack = true;
             emit signalReceiveFromCoin_ACK();
         }
         else if((int)return_packet[3] == 5){
             debug("ReceiveFromCoin - NACKED...");
+            flag_received_nack = true;
             emit signalReceiveFromCoin_NACK();
         }
-        else
-            debug("!! warning - Received CoinHeader undefine");
+        else{
+            flag_received_error = -3;
+            debug("!! warning - Received BillHeader undefine");
+        }
 
     }
     else if((int)return_packet[2] == ADDR_BILL){
@@ -581,16 +649,19 @@ void HM_CCTALK::slotChReceivePacket(QByteArray return_packet)
         }
         else if((int)return_packet[3] == 0){
             //debug("ReceiveFromBill - ACKED...");
+            flag_received_ack = true;
             emit signalReceiveFromBill_ACK();
         }
         else if((int)return_packet[3] == 5){
             //debug("ReceiveFromBill - NACKED...");
+            flag_received_nack = true;
             emit signalReceiveFromBill_NACK();
         }
-        else
+        else{
+            flag_received_error = -3;
             debug("!! warning - Received BillHeader undefine");
+        }
     }
-    flagReadyToSend = true;
 }
 
 void HM_CCTALK::slotTimeOut()
@@ -600,6 +671,7 @@ void HM_CCTALK::slotTimeOut()
     emit signalTimeout();
     flagConnectState = false;
     flagReadyToSend = true;
+    flag_received_error = -4;
 }
 
 //void HM_CCTALK::slotSendPacket()

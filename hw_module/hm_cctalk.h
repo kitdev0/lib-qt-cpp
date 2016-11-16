@@ -36,7 +36,7 @@
 #define _CCTALK_PORT "/dev/ttyS2"
 #endif
 
-#define _CCTALK_RESTURN_PACKET_TIMEOUT 500
+#define _CCTALK_RETURN_PACKET_TIMEOUT 500
 
 enum ccTalkHeaderType
 {
@@ -230,7 +230,7 @@ public:
     bool init();
     bool init(QString serial_port);
     bool init(const QSerialPortInfo&);
-    void simplePoll(ccTalkAddressType slave);
+    bool simplePoll(ccTalkAddressType slave,bool _wait_return);
     void selfCheck(ccTalkAddressType slave);
     void setEnable(ccTalkAddressType slave);
     void setEnable(ccTalkAddressType slave, uint8_t data0, uint8_t data1);
@@ -239,8 +239,8 @@ public:
     void readBufEvent(ccTalkAddressType slave);
     void resetDevice(ccTalkAddressType slave);
     void routeBill(ccTalkAddressType slave,bool dir);
-    void reqSoftwareRev(ccTalkAddressType slave);
-    void reqCurrencyRev(ccTalkAddressType slave);
+    QString reqSoftwareRev(ccTalkAddressType slave, bool _wait_return);
+    QString reqCurrencyRev(ccTalkAddressType slave, bool _wait_return);
     bool connectState();
     bool readyToSend();
     void closePort();
@@ -259,7 +259,7 @@ signals:
     void signalBillVerify(uint8_t);
     void signalBillAccepted(uint8_t);
     void signalBillSelfCheckError(uint8_t);
-    void signalLogDebugSay(QString);
+    void signalLogDebugSay(QString); 
 public slots:
 
 private:
@@ -271,6 +271,8 @@ private:
 
     QByteArray read_packet_buf;
     QByteArray send_packet_buf;
+    QString currency_rev = "";
+    QString software_rev = "";
 
     int16_t reflect_data_size = 0;
     int16_t lastCoinHead_send = RETURN_MESSAGE;
@@ -282,6 +284,9 @@ private:
 
     uint8_t event_Coin = 0;
     uint8_t event_Bill = 0;
+    int8_t flag_received_error = 0;
+    bool flag_received_ack = false;
+    bool flag_received_nack = false;
 
     bool moduleInit(QString);
     void writeData(QByteArray data, uint8_t size);

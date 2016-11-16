@@ -43,7 +43,7 @@ HM_CCTALK_DEVICE::~HM_CCTALK_DEVICE()
 
 //public
 #if defined(_COIN_ADDR) || defined(_BILL_ADDR)
-void HM_CCTALK_DEVICE::connectDevice()
+bool HM_CCTALK_DEVICE::connectDevice(bool _wait_return)
 {
     coinAccConnectState = false;
     billAccConnectState = false;
@@ -57,14 +57,24 @@ void HM_CCTALK_DEVICE::connectDevice()
         portList->append(info);
     }
     if(!portList->isEmpty()){
+        if(_wait_return){
+            debug("#A");
+            return tryToConnectDevice();
+        }
+        else{
 #ifdef _COIN_ADDR
-        connect(ccTalk,SIGNAL(signalReceiveFromCoin_ACK()),this,SLOT(slotSetCoinConnectState()));
+            connect(ccTalk,SIGNAL(signalReceiveFromCoin_ACK()),this,SLOT(slotSetCoinConnectState()));
 #endif
 #ifdef _BILL_ADDR
-        connect(ccTalk,SIGNAL(signalReceiveFromBill_ACK()),this,SLOT(slotSetBillConnectState()));
+            connect(ccTalk,SIGNAL(signalReceiveFromBill_ACK()),this,SLOT(slotSetBillConnectState()));
 #endif
-        if(!detectPortTimer.isActive()) detectPortTimer.start(_DETECT_DEVICE_TIMER);
+        }
+        if(!_wait_return){
+            if(!detectPortTimer.isActive())
+                detectPortTimer.start(_DETECT_DEVICE_TIMER);
+        }
     }
+    return 0;
 }
 
 void HM_CCTALK_DEVICE::disconnectDevice()
@@ -100,9 +110,110 @@ void HM_CCTALK_DEVICE::debug(QString data)
 #endif
 }
 
-void HM_CCTALK_DEVICE::slotLogDebugSay(QString _str)
+bool HM_CCTALK_DEVICE::tryToConnectDevice()
 {
-    emit signalLogDebugSay(_str);
+#ifdef Q_OS_OSX
+    for(int i=0; i < portList->size() ;i++)
+    {
+        if(portList->at(i).portName().indexOf(String(_OSX_SERIAL_PORT_DEVICE)) == -1){
+            portList->removeAt(i);
+        }
+    }
+
+#else
+#ifdef Q_OS_LINUX
+    while(portList->first().portName().indexOf(String(_RPI_USB_SERIAL_PORT_DEVICE)) == -1  && portList->first().portName().indexOf(String(_RPI_ARDUINO_SERIAL_PORT_DEVICE)) == -1){
+        portList->removeFirst();
+        if(portList->empty())
+            return 0;
+    }
+#endif
+#endif
+    for(int i=0; i < portList->size() ;i++)
+    {
+        if(ccTalk->init(portList->at(i).portName())){
+            flagPortOpen = true;
+        }
+        else{
+            ccTalk->closePort();
+            portList->removeAt(i);
+            flagPortOpen = false;
+        }
+
+        if(flagPortOpen == true && ccTalk->readyToSend())
+        {
+#if defined(_COIN_ADDR) && defined(_BILL_ADDR)
+            if(coinAccConnectState == false)
+            {
+                _tryConnectNo = _TRY_CONNECT_NO;
+                while(_tryConnectNo)
+                {
+                    if(ccTalk->simplePoll(_COIN_ADDR,true)){
+                        coinAccConnectState = true;
+                        break;
+                    }
+                    else
+                        _tryConnectNo--;
+                }
+            }
+            if(billAccConnectState == false)
+            {
+                _tryConnectNo = _TRY_CONNECT_NO;
+                while(_tryConnectNo)
+                {
+                    if(ccTalk->simplePoll(_BILL_ADDR,true)){
+                        billAccConnectState = true;
+                        break;
+                    }
+                    else
+                        _tryConnectNo--;
+                }
+            }
+            if(coinAccConnectState || billAccConnectState)
+                return 1;
+#else
+#ifdef _COIN_ADDR
+            if(coinAccConnectState == false)
+            {
+                _tryConnectNo = _TRY_CONNECT_NO;
+                while(_tryConnectNo)
+                {
+                    if(ccTalk->simplePoll(_COIN_ADDR,true)){
+                        coinAccConnectState = true;
+                        break;
+                    }
+                    else
+                        _tryConnectNo--;
+                }
+            }
+            if(coinAccConnectState)
+                return 1;
+#else
+#ifdef _BILL_ADDR
+            if(billAccConnectState == false)
+            {
+                _tryConnectNo = _TRY_CONNECT_NO;
+                while(_tryConnectNo)
+                {
+                    if(ccTalk->simplePoll(_BILL_ADDR,true)){
+                        billAccConnectState = true;
+                        break;
+                    }
+                    else
+                        _tryConnectNo--;
+                }
+            }
+            if(billAccConnectState)
+                return 1;
+#endif
+#endif
+#endif
+            ccTalk->closePort();
+            portList->removeAt(i);
+        }
+    }
+    debug("Can't connect to device!!");
+    return 0;
 }
 
 void HM_CCTALK_DEVICE::slotDetectPort()
@@ -168,7 +279,7 @@ void HM_CCTALK_DEVICE::slotDetectPort()
 #else
 #ifdef _BILL_ADDR
             if(billAccConnectState == false)
-                ccTalk->simplePoll(_BILL_ADDR);
+                ccTalk->simplePoll(_BILL_ADDR,false);
 #endif
 #endif
 #endif
@@ -428,23 +539,23 @@ void HM_CCTALK_DEVICE::billAccReject(void)
     ccTalk->routeBill(_BILL_ADDR,false);
 }
 
-void HM_CCTALK_DEVICE::bv20UpdateFirmware()
+bool HM_CCTALK_DEVICE::bv20UpdateFirmware()
 {
     debug("billAcc >> Update firmware");
     if(!checkFirmwareFileExist(pathFile)) {
-        return;
+        return 0;
     }
-
+    return 1;
 }
 
-void HM_CCTALK_DEVICE::billReqCurrencyRev()
+QString HM_CCTALK_DEVICE::billReqCurrencyRev()
 {
-    ccTalk->reqCurrencyRev(_BILL_ADDR);
+    return ccTalk->reqCurrencyRev(_BILL_ADDR,true);
 }
 
-void HM_CCTALK_DEVICE::billReqSoftwareRev()
+QString HM_CCTALK_DEVICE::billReqSoftwareRev()
 {
-    ccTalk->reqSoftwareRev(_BILL_ADDR);
+    return ccTalk->reqSoftwareRev(_BILL_ADDR,true);
 }
 
 bool HM_CCTALK_DEVICE::checkFirmwareFileExist(QString _path_file)
