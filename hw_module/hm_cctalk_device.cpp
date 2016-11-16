@@ -13,7 +13,6 @@ HM_CCTALK_DEVICE::HM_CCTALK_DEVICE(QObject *parent):
     ccTalk = new HM_CCTALK(this);
     delay = new SM_DELAY;
 
-    connect(logDebug,SIGNAL(signalSay(QString)),this,SLOT(slotLogDebugSay(QString)));
     connect(ccTalk,SIGNAL(signalLogDebugSay(QString)),this,SLOT(slotLogDebugSay(QString)));
     connect(ccTalk,SIGNAL(signalTimeout()),this,SLOT(slotDeviceTimeout()));
     connect(&detectPortTimer,SIGNAL(timeout()),this,SLOT(slotDetectPort()));
@@ -398,8 +397,8 @@ void HM_CCTALK_DEVICE::billAccEnable(void)
 {
     debug("billAcc >> Enable");
     if(!flag_billEnable){
-        ccTalk->setEnable(ADDR_BILL,255,3);
-        ccTalk->setMaster_ON(ADDR_BILL);
+        ccTalk->setEnable(_BILL_ADDR,255,3);
+        ccTalk->setMaster_ON(_BILL_ADDR);
         if(!billReadBuffTimer.isActive()) billReadBuffTimer.start(_BILL_INTERVAL_TM);
         flag_billEnable = true;
     }
@@ -409,7 +408,7 @@ void HM_CCTALK_DEVICE::billAccDisable(void)
 {
     debug("billAcc >> Disable");
     if(flag_billEnable){
-        ccTalk->setMaster_OFF(ADDR_BILL);
+        ccTalk->setMaster_OFF(_BILL_ADDR);
         if(billReadBuffTimer.isActive()) billReadBuffTimer.stop();
         flag_billEnable = false;
     }
@@ -426,23 +425,127 @@ void HM_CCTALK_DEVICE::billAccAccept(void)
 void HM_CCTALK_DEVICE::billAccReject(void)
 {
     debug("billAcc >> Reject");
-    ccTalk->routeBill(ADDR_BILL,false);
+    ccTalk->routeBill(_BILL_ADDR,false);
 }
 
 void HM_CCTALK_DEVICE::bv20UpdateFirmware()
 {
     debug("billAcc >> Update firmware");
+    if(!checkFirmwareFileExist(pathFile)) {
+        return;
+    }
+
 }
 
 void HM_CCTALK_DEVICE::billReqCurrencyRev()
 {
-    ccTalk->reqCurrencyRev(ADDR_BILL);
+    ccTalk->reqCurrencyRev(_BILL_ADDR);
 }
+
+void HM_CCTALK_DEVICE::billReqSoftwareRev()
+{
+    ccTalk->reqSoftwareRev(_BILL_ADDR);
+}
+
+bool HM_CCTALK_DEVICE::checkFirmwareFileExist(QString _path_file)
+{
+//    QFile _file(_path_file);
+    QDir _dir(_path_file);
+
+    debug("Check firmware file exitst ?");
+    debug("Path file >> " + _path_file);
+
+    QStringList _fileslist;
+    _fileslist << "*.ct1.txt";
+    _fileslist << "*.ct2.txt";
+
+    _dir.setNameFilters(_fileslist);
+    QStringList _files = _dir.entryList();
+
+    for(int i=0; i < _files.size();i++){
+        debug("File name >> " + _files.at(i));
+    }
+
+    if(_files.size() == 2)
+    {
+        return 1;
+    }
+    else{
+        debug("Firmware file not found!!");
+        return 0;
+    }
+}
+
+bool HM_CCTALK_DEVICE::readFirmwareFile(QString _path_file)
+{
+    QFile file(_path_file);
+    if(checkFirmwareFileExist(_path_file))
+    {
+        if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream stream( &file );
+//            while( !stream.atEnd() )
+//            {
+//              QString text;
+//              stream >> text;
+//              qDebug() << text;
+//            }
+//            stream.seek(0);
+//            QString text = stream.read(_BV20_FIEMWARE_PART_SIZE);
+//            qDebug() << text;
+
+//            stream.seek(_BV20_FIEMWARE_PART_SIZE);
+//            text = stream.read(_BV20_FIEMWARE_PART_SIZE);
+//            qDebug() << text;
+            int _i = 0;
+            while(1)
+            {
+                stream.seek(_i * _BV20_FIRMWARE_PART_SIZE);
+                QString _data = stream.read(_BV20_FIRMWARE_PART_SIZE);
+                if(_data.size() == 0){
+                    debug("Read success");
+                    break;
+                }
+                else{
+                    debug("data = " + _data);
+                    _i++;
+                }
+            }
+
+//            while(!stream.atEnd())
+//            {
+//              QString text;
+//              text = stream.readLine();
+//              qDebug() << text;
+//            }
+
+            file.close();
+            file.close();
+            return 1;
+        }
+        else
+        {
+            debug("Firmware file cannot open!!");
+            file.close();
+            return 0;
+        }
+    }
+    return 0;
+}
+
+//pubplic slot
+void HM_CCTALK_DEVICE::slotBV20UpdateFirmware()
+{
+    bv20UpdateFirmware();
+}
+
+//private
+
 
 //slot
 void HM_CCTALK_DEVICE::slotReadBillBuffer(void)
 {
-    ccTalk->readBufEvent(ADDR_BILL);
+    ccTalk->readBufEvent(_BILL_ADDR);
 }
 
 void HM_CCTALK_DEVICE::slotITLBV20BillValue_verify(uint8_t ch)
@@ -588,6 +691,7 @@ void HM_CCTALK_DEVICE::slotBillAccept()
 {
     ccTalk->routeBill(_BILL_ADDR,true);
 }
+
 
 #endif
 /*
