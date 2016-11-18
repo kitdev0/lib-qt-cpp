@@ -709,6 +709,7 @@ void HM_CCTALK_DEVICE::bv20FwUpgradeErrorDescrip(int8_t _error_code)
         debug("ct2 (Module2) downloadfail.");
         break;
     default:
+        debug("Can't find error code description");
         break;
     }
 }
