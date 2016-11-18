@@ -58,8 +58,10 @@ bool HM_CCTALK_DEVICE::connectDevice(bool _wait_return)
     }
     if(!portList->isEmpty()){
         if(_wait_return){
-            debug("#A");
-            return tryToConnectDevice();
+            if(tryToConnectDevice())
+                return 1;
+            else
+                return 0;
         }
         else{
 #ifdef _COIN_ADDR
@@ -150,6 +152,7 @@ bool HM_CCTALK_DEVICE::tryToConnectDevice()
                 {
                     if(ccTalk->simplePoll(_COIN_ADDR,true)){
                         coinAccConnectState = true;
+                        debug("Coin Acc. is connected.");
                         break;
                     }
                     else
@@ -163,6 +166,7 @@ bool HM_CCTALK_DEVICE::tryToConnectDevice()
                 {
                     if(ccTalk->simplePoll(_BILL_ADDR,true)){
                         billAccConnectState = true;
+                        debug("Bill Acc. is connected.");
                         break;
                     }
                     else
@@ -180,6 +184,7 @@ bool HM_CCTALK_DEVICE::tryToConnectDevice()
                 {
                     if(ccTalk->simplePoll(_COIN_ADDR,true)){
                         coinAccConnectState = true;
+                        debug("Coin Acc. is connected.");
                         break;
                     }
                     else
@@ -197,6 +202,7 @@ bool HM_CCTALK_DEVICE::tryToConnectDevice()
                 {
                     if(ccTalk->simplePoll(_BILL_ADDR,true)){
                         billAccConnectState = true;
+                        debug("Bill Acc. is connected.");
                         break;
                     }
                     else
@@ -541,9 +547,33 @@ void HM_CCTALK_DEVICE::billAccReject(void)
 
 bool HM_CCTALK_DEVICE::bv20UpdateFirmware()
 {
-    debug("billAcc >> Update firmware");
+    debug("Bill Acc. >> Update firmware");
     if(!checkFirmwareFileExist(pathFile)) {
         return 0;
+    }
+
+    if(!ccTalk->beginFirmwareUpgrade(_BILL_ADDR,true)){ //check upgrade firmware support?
+        debug("The device not support!!");
+        return 0;
+    }
+
+    int _try = 5;
+    while (1){
+        if(!ccTalk->beginFirmwareUpgrade(_BILL_ADDR,1,true)){ //set ready to upgrade firmware Module-1 [.ct1.txt]
+            _try--;
+            if(_try == 0){
+                debug("Not ready to upgrade firmware Module-1");
+                return 0;
+            }
+        }
+        else{
+            debug("Ready to upgrade firmware Module-1");
+            break;
+        }
+    }
+
+    if(!ccTalk->uploadFirmware(_BILL_ADDR,true)){ //upload firware to BV20
+        bv20FwUpgradeErrorDescrip(ccTalk->getFirmwareUpgradeError(_BILL_ADDR,true));
     }
     return 1;
 }
@@ -648,6 +678,39 @@ bool HM_CCTALK_DEVICE::readFirmwareFile(QString _path_file)
 void HM_CCTALK_DEVICE::slotBV20UpdateFirmware()
 {
     bv20UpdateFirmware();
+}
+
+//pubplic
+void HM_CCTALK_DEVICE::bv20FwUpgradeErrorDescrip(int8_t _error_code)
+{
+    switch (_error_code) {
+    case 20:
+        debug("file incompatibility");
+        break;
+    case 21:
+        debug("memory write failure.");
+        break;
+    case 22:
+        debug("memory data checksum failure.");
+        break;
+    case 23:
+        debug("line/block error – the block and line data in the packet do not match the counters stored in the device.");
+        break;
+    case 24:
+        debug("Incorrect data length, set if command 140 was sent with different length than 130 bytes.");
+        break;
+    case 25:
+        debug("No download in progress, set if command 140 was sent without sending command 139 before.");
+        break;
+    case 81:
+        debug("ct1 (Module1) downloadfail.");
+        break;
+    case 82:
+        debug("ct2 (Module2) downloadfail.");
+        break;
+    default:
+        break;
+    }
 }
 
 //private
