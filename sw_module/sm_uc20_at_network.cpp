@@ -148,6 +148,8 @@ bool SM_UC20_AT_NETWORK_CLASS::setOperator(void)
 		_str += "\"TH-DTAC\",0";
 #elif _OPERATOR == _TRUE
 		_str += "\"TRUE\",0";
+#elif _OPERATOR == _TRUE_IOT
+        _str += "\"TRUE\",0";
 #elif _OPERATOR == _AIS
 		_str += "\"TH GSM\",0";
 #endif // 
