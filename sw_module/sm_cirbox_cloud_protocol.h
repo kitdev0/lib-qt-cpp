@@ -1,5 +1,5 @@
-#ifndef SM_CIRBOX_CLOUD_PROTOCOL_V201_H
-#define SM_CIRBOX_CLOUD_PROTOCOL_V201_H
+#ifndef SM_CIRBOX_CLOUD_PROTOCOL_H
+#define SM_CIRBOX_CLOUD_PROTOCOL_H
 
 #include <QObject>
 #include <QTimer>

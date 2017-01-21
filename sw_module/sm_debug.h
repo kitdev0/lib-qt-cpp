@@ -1,5 +1,5 @@
-#ifndef SM_DEBUG_V102_H
-#define SM_DEBUG_V102_H
+#ifndef SM_DEBUG_H
+#define SM_DEBUG_H
 
 #include <stdint.h>
 #include <stdbool.h>

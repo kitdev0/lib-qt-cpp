@@ -1,5 +1,5 @@
-#ifndef SM_DELAY_V101_H
-#define SM_DELAY_V101_H
+#ifndef SM_DELAY_H
+#define SM_DELAY_H
 
 #include <QThread>
 

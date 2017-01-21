@@ -1,5 +1,5 @@
-#ifndef _HM_UC20_V101_H
-#define _HM_UC20_V101_H
+#ifndef _HM_UC20_H
+#define _HM_UC20_H
 
 #include "../../../../lib-qt-cpp/sw_module/sm_debug.h"
 #include "../../../../lib-qt-cpp/sw_module/sm_delay.h"

@@ -1,7 +1,7 @@
 // sm_uc20_at_http_class.h
 
-#ifndef SM_UC20_AT_HTTP_V101_H
-#define SM_UC20_AT_HTTP_V101_H
+#ifndef SM_UC20_AT_HTTP_H
+#define SM_UC20_AT_HTTP_H
 
 #include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
 

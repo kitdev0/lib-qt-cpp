@@ -1,5 +1,5 @@
-#ifndef SM_CB_PROTOCOL_CMD_V101_H
-#define SM_CB_PROTOCOL_CMD_V101_H
+#ifndef SM_CB_PROTOCOL_CMD_H
+#define SM_CB_PROTOCOL_CMD_H
 
 #include <stdint.h>
 #include <stdbool.h>

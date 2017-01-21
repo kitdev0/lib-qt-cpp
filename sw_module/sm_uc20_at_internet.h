@@ -1,7 +1,7 @@
 // sm_uc20_at_internet_class.h
 
-#ifndef SM_UC20_AT_INTERNET_V102_H
-#define SM_UC20_AT_INTERNET_V102_H
+#ifndef SM_UC20_AT_INTERNET_H
+#define SM_UC20_AT_INTERNET_H
 
 #include <QObject>
 #include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"

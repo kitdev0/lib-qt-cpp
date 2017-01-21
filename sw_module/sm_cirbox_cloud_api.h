@@ -1,5 +1,5 @@
-#ifndef SM_CIRBOX_CLOUD_API_V101_H
-#define SM_CIRBOX_CLOUD_API_V101_H
+#ifndef SM_CIRBOX_CLOUD_API_H
+#define SM_CIRBOX_CLOUD_API_H
 
 #include <QObject>
 #include <QTimer>

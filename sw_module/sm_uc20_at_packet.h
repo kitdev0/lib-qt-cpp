@@ -1,7 +1,7 @@
 // sm_uc20_at_packet_class.h
 
-#ifndef SM_UC20_AT_PACKET_V101_H
-#define SM_UC20_AT_PACKET_V101_H
+#ifndef SM_UC20_AT_PACKET_H
+#define SM_UC20_AT_PACKET_H
 
 #include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
 
