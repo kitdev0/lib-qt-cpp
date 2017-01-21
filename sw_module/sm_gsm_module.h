@@ -78,6 +78,7 @@ private:
 signals:
     void signalInternetIsOK(void);
     void signalSetLEDGsm(bool _state);
+    void signalGetNetworkRegisOK();
 
 public slots:
     void slotResetGsmModule();
