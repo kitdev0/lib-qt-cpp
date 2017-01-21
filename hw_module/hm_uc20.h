@@ -53,14 +53,19 @@
 #define _TRUE 1
 #endif //_OP_TRUE_DEF
 
+#ifndef _TRUE_IOT
+#define _TRUE_IOT 2
+#endif //_OP_TRUE_IOT_DEF
+
 #ifndef _AIS
-#define _AIS 2
+#define _AIS 3
 #endif //_OP_AIS_DEF
 
 //Please define Operator Here !!
 #ifndef _OPERATOR
 //#define _OPERATOR _DTAC
-#define _OPERATOR _TRUE
+//#define _OPERATOR _TRUE
+#define _OPERATOR _TRUE_IOT
 //#define _OPERATOR _AIS
 #endif // !_OPERATOR
 
@@ -70,9 +75,11 @@
 #define _PASS ""
 
 #elif _OPERATOR == _TRUE //True
-//#define _APN "internet"
-//#define _USER "True"
-//#define _PASS "true"
+#define _APN "internet"
+#define _USER "True"
+#define _PASS "true"
+
+#elif _OPERATOR == _TRUE_IOT //True
 #define _APN "m2minternet"
 #define _USER "true"
 #define _PASS "true"
