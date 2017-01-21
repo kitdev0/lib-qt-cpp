@@ -114,7 +114,7 @@ bool SM_GSM_MODULE::init(void)
         }
     }
     debug("wait time = " + String::number(_timer.elapsed()) + " [ms]");
-
+    emit signalGetNetworkRegisOK();
     return 1;
 }
 
