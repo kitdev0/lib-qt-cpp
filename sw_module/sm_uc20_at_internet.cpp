@@ -1,4 +1,4 @@
-#include "sm_uc20_at_internet_v102.h"
+#include "sm_uc20_at_internet.h"
 
 SM_UC20_AT_INTERNET_CLASS::SM_UC20_AT_INTERNET_CLASS(HM_UC20CLASS* _module, QObject *parent):
     QObject(parent)

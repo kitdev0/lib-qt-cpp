@@ -1,4 +1,4 @@
-#include "hm_gpio_v101.h"
+#include "hm_gpio.h"
 #include <QFile>
 
 HM_GPIO::HM_GPIO(QObject *parent) : QObject(parent)

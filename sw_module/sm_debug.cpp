@@ -1,4 +1,4 @@
-#include "sm_debug_v102.h"
+#include "sm_debug.h"
 
 SM_DEBUGCLASS::SM_DEBUGCLASS(String _head, QObject *parent) :
     QObject(parent)

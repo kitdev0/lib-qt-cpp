@@ -1,4 +1,4 @@
-#include "sm_uc20_at_network_v101.h"
+#include "sm_uc20_at_network.h"
 
 SM_UC20_AT_NETWORK_CLASS::SM_UC20_AT_NETWORK_CLASS(HM_UC20CLASS* _module)
 {

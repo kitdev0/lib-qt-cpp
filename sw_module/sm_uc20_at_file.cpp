@@ -1,4 +1,4 @@
-#include "sm_uc20_at_file_v101.h"
+#include "sm_uc20_at_file.h"
 
 void func_null(String) {}
 void func_null(char) {}

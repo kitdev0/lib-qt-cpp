@@ -1,4 +1,4 @@
-#include "sm_uc20_at_sim_v101.h"
+#include "sm_uc20_at_sim.h"
 
 SM_UC20_AT_SIM_CLASS::SM_UC20_AT_SIM_CLASS(HM_UC20CLASS* _module)
 {

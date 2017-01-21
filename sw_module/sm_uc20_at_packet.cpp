@@ -1,4 +1,4 @@
-#include "sm_uc20_at_packet_v101.h"
+#include "sm_uc20_at_packet.h"
 
 SM_UC20_AT_PACKET_CLASS::SM_UC20_AT_PACKET_CLASS(HM_UC20CLASS* _module)
 {

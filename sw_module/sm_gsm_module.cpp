@@ -1,4 +1,4 @@
-#include "sm_gsm_module_v102.h"
+#include "sm_gsm_module.h"
 
 SM_GSM_MODULE::SM_GSM_MODULE(QObject *parent) : QObject(parent)
 {
