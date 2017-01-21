@@ -5,13 +5,13 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-#include "hw_module/hm_uc20_v101.h"
-#include "sm_uc20_at_sim_v101.h"
-#include "sm_uc20_at_network_v101.h"
-#include "sm_uc20_at_packet_v101.h"
-#include "sm_uc20_at_internet_v102.h"
-#include "sm_uc20_at_http_v101.h"
-#include "sm_uc20_at_file_v101.h"
+#include "../../../../lib-qt-cpp/hw_module/hm_uc20.cpp"
+#include "sm_uc20_at_sim.h"
+#include "sm_uc20_at_network.h"
+#include "sm_uc20_at_packet.h"
+#include "sm_uc20_at_internet.h"
+#include "sm_uc20_at_http.h"
+#include "sm_uc20_at_file.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0

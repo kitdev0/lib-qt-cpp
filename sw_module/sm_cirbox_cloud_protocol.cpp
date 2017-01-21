@@ -1,4 +1,4 @@
-#include "sm_cirbox_cloud_protocol_v202.h"
+#include "sm_cirbox_cloud_protocol.h"
 
 SM_CIRBOX_CLOUD_PROTOCOL::SM_CIRBOX_CLOUD_PROTOCOL(SM_CIRBOX_CLOUD_API *api_port, QObject *parent):
     QObject(parent)

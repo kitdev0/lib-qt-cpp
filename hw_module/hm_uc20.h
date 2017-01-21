@@ -1,9 +1,9 @@
 #ifndef _HM_UC20_V101_H
 #define _HM_UC20_V101_H
 
-#include "sw_module/sm_debug_v102.h"
-#include "sw_module/sm_delay_v101.h"
-#include "hw_module/hm_gpio_v101.h"
+#include "../../../../lib-qt-cpp/sw_module/sm_debug.h"
+#include "../../../../lib-qt-cpp/sw_module/sm_delay.h"
+#include "hm_gpio.h"
 
 #include <QElapsedTimer>
 #include <QSerialPortInfo>

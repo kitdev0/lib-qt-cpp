@@ -1,4 +1,4 @@
-#include "hm_uc20_v101.h"
+#include "hm_uc20.h"
 
 QElapsedTimer timer0;
 

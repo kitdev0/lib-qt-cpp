@@ -1,4 +1,4 @@
-#include "sm_cirbox_cloud_api_v102.h"
+#include "sm_cirbox_cloud_api.h"
 
 SM_CIRBOX_CLOUD_API::SM_CIRBOX_CLOUD_API(SM_GSM_MODULE *my_ethernet, QObject *parent) :
     QObject(parent)

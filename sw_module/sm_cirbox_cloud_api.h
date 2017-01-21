@@ -6,7 +6,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include "sm_gsm_module_v102.h"
+#include "sm_gsm_module.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0

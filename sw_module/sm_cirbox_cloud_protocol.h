@@ -3,9 +3,9 @@
 
 #include <QObject>
 #include <QTimer>
-#include "sm_debug_v102.h"
-#include "sm_cirbox_cloud_api_v102.h"
-#include "sm_cb_protocol_cmd_v202.h"
+#include "sm_debug.h"
+#include "sm_cirbox_cloud_api.h"
+#include "sm_cb_protocol_cmd.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0
