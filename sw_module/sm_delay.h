@@ -6,9 +6,9 @@
 class SM_DELAY : public QThread
 {
 public:
-    static void delay_us(unsigned long usecs){QThread::usleep(usecs);}
-    static void delay_ms(unsigned long msecs){QThread::msleep(msecs);}
-    static void delay_sec(unsigned long secs){QThread::sleep(secs);}
+    inline static void delay_us(unsigned long usecs){QThread::usleep(usecs);}
+    inline static void delay_ms(unsigned long msecs){QThread::msleep(msecs);}
+    inline static void delay_sec(unsigned long secs){QThread::sleep(secs);}
 };
 
 

@@ -126,12 +126,12 @@ public:
 
     QSerialPort *serial_port;
 
-    bool isBegin(void) {return is_begin;}
-    bool isConnected(void) {return is_connected;}
+    inline bool isBegin(void) {return is_begin;}
+    inline bool isConnected(void) {return is_connected;}
     void setPwrPin(uint16_t _pin);
-	void timeoutStart(void);
-	void timeoutReset(void);
-	void clrSerialBuffer(void);
+    void timeoutStart(void);
+    void timeoutReset(void);
+    void clrSerialBuffer(void);
     bool dataAvailable(void);
     char receiveData(void);
     bool sendData(QString _data, bool _flag_ln);
@@ -139,17 +139,17 @@ public:
     String receiveStringUntil(String _data);
     String receiveStringUntil(char _data);
     bool begin(uint32_t _baud, uint16_t _pwr_pin);
-	bool begin(uint32_t _baud);
-	bool waitOK(uint32_t _time);
-	bool waitOK_ndb(uint32_t _time);
-	bool waitOK(uint32_t _time, bool _ack);
-	bool timeoutCheck(uint32_t _time);
-	bool waitToReady(uint32_t _wait_time);
-	bool setPwr(bool _value);
-	bool setURCPort(URC_t _port);		//QURCCFG=_port
-	bool setEcho(bool _value);			//ATEn
-	bool setPhoneFunc(uint8_t _value);	//CFUN=_value
-	URC_t getURCPort(void);				//QURCCFG?
+    bool begin(uint32_t _baud);
+    bool waitOK(uint32_t _time);
+    bool waitOK_ndb(uint32_t _time);
+    bool waitOK(uint32_t _time, bool _ack);
+    bool timeoutCheck(uint32_t _time);
+    bool waitToReady(uint32_t _wait_time);
+    bool setPwr(bool _value);
+    bool setURCPort(URC_t _port);		//QURCCFG=_port
+    bool setEcho(bool _value);			//ATEn
+    bool setPhoneFunc(uint8_t _value);	//CFUN=_value
+    URC_t getURCPort(void);				//QURCCFG?
     String getIMEI(void);				//CGSN
     String getPhoneNum(OPERATOR_t _op);	//CUSD=1, //"*545*9#"-AIS, "*102*9#"-Dtac, "*933*9#"-True
 

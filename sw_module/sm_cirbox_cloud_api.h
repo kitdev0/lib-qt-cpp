@@ -73,7 +73,7 @@ public:
     bool setAPIData(String _table_no, String _api_id, String _data);
     uint16_t apiDataToSendAvailable(void);
     void clientPingResetTimer(void);
-    bool getCloudBoxReady(){return cloud_box_ready;}
+    inline bool getCloudBoxReady(){return cloud_box_ready;}
 public slots:
     void slotReqUpdateAPI(QJsonDocument *_json_report);
 

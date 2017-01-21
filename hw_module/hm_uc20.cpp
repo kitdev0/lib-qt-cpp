@@ -1,4 +1,5 @@
 #include "hm_uc20.h"
+#include "../../../../lib-qt-cpp/sw_module/sm_delay.h"
 
 QElapsedTimer timer0;
 
@@ -25,9 +26,9 @@ void HM_UC20CLASS::debug(String data)
 #if _UC20_DEBUG == _DEBUG_SAY_ONLY
     logDebug->say(data);
 #elif _UC20_DEBUG == _DEBUG_WRITE_ONLY
-	logDebug->writeLog(data);
+    logDebug->writeLog(data);
 #elif _UC20_DEBUG == _DEBUG_SAY_AND_WRITE
-	logDebug->sayAndWriteLog(data);
+    logDebug->sayAndWriteLog(data);
 #endif
 #endif
 }
@@ -295,7 +296,7 @@ String HM_UC20CLASS::receiveStringUntil(String _data)
 
 void HM_UC20CLASS::setPwrPin(uint16_t _pin)
 {
-	debug("set Pwr-Pin >> " + String(_pin));
+    debug("set Pwr-Pin >> " + String(_pin));
     if(is_begin)
         gpio.pinUnExport(pwr_key);
     pwr_key = _pin;

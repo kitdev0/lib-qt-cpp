@@ -5,7 +5,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-#include "../../../../lib-qt-cpp/hw_module/hm_uc20.cpp"
+#include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
 #include "sm_uc20_at_sim.h"
 #include "sm_uc20_at_network.h"
 #include "sm_uc20_at_packet.h"
@@ -61,8 +61,8 @@ public:
 
     bool init(void);
     bool setInternet(void);
-    bool moduleIsReady(void){return module_is_ready;}
-    bool moduleCannotUse(void){return flag_gsm_module_cannot_use;}
+    inline bool moduleIsReady(void){return module_is_ready;}
+    inline bool moduleCannotUse(void){return flag_gsm_module_cannot_use;}
 
 private:    
     HM_UC20CLASS uc20_module;
