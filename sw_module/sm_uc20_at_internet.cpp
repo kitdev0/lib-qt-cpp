@@ -48,24 +48,28 @@ bool SM_UC20_AT_INTERNET_CLASS::configure(void)
 {
 	String _str = "AT+QICSGP=1,1,";
     String _debug = "configure-APN >> ";
-#ifdef _OPERATOR
-#if _OPERATOR == _DTAC
-	_str += "\"www.dtac.co.th\",";
-	_str += "\"\",";
-	_str += "\"\",";
-	_str += "1";
-#elif _OPERATOR == _TRUE
-	_str += "\"internet\",";
-	_str += "\"True\",";
-	_str += "\"true\",";
-	_str += "1";
-#elif _OPERATOR == _AIS
-	_str += "\"internet\",";
-	_str += "\"\",";
-	_str += "\"\",";
-	_str += "1";
-#endif // 
-#endif //
+//#ifdef _OPERATOR
+//#if _OPERATOR == _DTAC
+//	_str += "\"www.dtac.co.th\",";
+//	_str += "\"\",";
+//	_str += "\"\",";
+//	_str += "1";
+//#elif _OPERATOR == _TRUE
+//	_str += "\"internet\",";
+//	_str += "\"True\",";
+//	_str += "\"true\",";
+//	_str += "1";
+//#elif _OPERATOR == _AIS
+//	_str += "\"internet\",";
+//	_str += "\"\",";
+//	_str += "\"\",";
+//	_str += "1";
+//#endif //
+//#endif //
+    _str += "\"" + String(_APN) + "\",";
+    _str += "\"" + String(_USER) + "\",";
+    _str += "\"" + String(_PASS) + "\",";
+    _str += "1";
 	debug(_debug + _str);
     if(!gsmModule->sendData(_str,1))
         return 0;
