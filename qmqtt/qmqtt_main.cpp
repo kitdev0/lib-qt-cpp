@@ -1,4 +1,4 @@
-#include <qmqtt/qmqtt_main.h>
+#include "qmqtt_main.h"
 
 qmqtt_main::qmqtt_main()
 {

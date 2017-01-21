@@ -1,4 +1,4 @@
-#include "sm_client_mqtt_api_v101.h"
+#include "sm_client_mqtt_api.h"
 
 SM_CLIENT_MQTT_API::SM_CLIENT_MQTT_API(QObject *parent) : QObject(parent)
 {
