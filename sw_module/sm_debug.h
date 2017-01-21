@@ -1,5 +1,5 @@
-#ifndef SM_DEBUG_H
-#define SM_DEBUG_H
+#ifndef SM_DEBUG_V102_H
+#define SM_DEBUG_V102_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -12,6 +12,7 @@
 #include <QFile>
 #include <QDir>
 #include <QProcess>
+#include "global.h"
 
 #define _OSX_PLATFORM   0
 #define _LINUX_PLATFORM 1
@@ -44,32 +45,32 @@
 
 typedef QString String;
 
-class SM_DEBUG : public QObject
+class SM_DEBUGCLASS : public QObject
 {
     Q_OBJECT
 public:
-    explicit SM_DEBUG(QString _head,QObject *parent = 0);
+    explicit SM_DEBUGCLASS(String _head,QObject *parent = 0);
 
     static bool STATIC_BOOL_LOG_CAN_WRITE;
 
-    void setHeader(QString _header);
-    void setLogPath(QString _data);
-    void say(QString _data);
-    void sayln(QString _data);
-    void writeLog(QString _data);
-    void sayAndWriteLog(QString _data);
-    QString currentTime(void);
-    QString currentDay(void);
-    void setDateTime(QString _date, QString _time);
+    void setHeader(String _header);
+    void setLogPath(String _data);
+    void say(String _data);
+    void sayln(String _data);
+    void writeLog(String _data);
+    void sayAndWriteLog(String _data);
+    String currentTime(void);
+    String currentDay(void);
+    void setDateTime(String _date, String _time);
     void delOldFile(void);
 
 private:
-    QString log_path;
-    QString header;
-    QString setFormat(QString _data);
-    bool checkAndMakeLogDir(QString path);
-    bool checkAndWriteLogFile(QString path,QString data);
-    QString nextFileName(QString path);
+    String log_path;
+    String header;
+    String setFormat(String _data);
+    bool checkAndMakeLogDir(String path);
+    bool checkAndWriteLogFile(String path,String data);
+    String nextFileName(String path);
     void checkOldDir(void);
     void checkOldFile(QFileInfo fileInfo);
 
@@ -77,4 +78,4 @@ signals:
     void logEvent(QString _msg);
 };
 
-#endif // SM_DEBUG_H
+#endif // SM_DEBUGCLASS_H

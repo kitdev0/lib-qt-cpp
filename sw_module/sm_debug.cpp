@@ -1,6 +1,6 @@
-#include "sm_debug.h"
+#include "sm_debug_v102.h"
 
-SM_DEBUG::SM_DEBUG(QString _head, QObject *parent) :
+SM_DEBUGCLASS::SM_DEBUGCLASS(String _head, QObject *parent) :
     QObject(parent)
 {
     log_path = _LOG_PATH;
@@ -8,52 +8,52 @@ SM_DEBUG::SM_DEBUG(QString _head, QObject *parent) :
 }
 
 //  private:
-QString SM_DEBUG::setFormat(QString _data)
+String SM_DEBUGCLASS::setFormat(String _data)
 {
-    QString _str;
+    String _str;
     _str = currentTime() + " " + header + " : " + _data;
     return _str;
 }
 
-QString SM_DEBUG::currentTime(void)
+String SM_DEBUGCLASS::currentTime(void)
 {
     return QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
 }
 
-QString SM_DEBUG::currentDay(void)
+String SM_DEBUGCLASS::currentDay(void)
 {
-    return QDateTime::currentDateTime().toString("dd-MM-yyyy");
+    return QDateTime::currentDateTime().toString("yyyy-MM-dd");
 }
 
-void SM_DEBUG::setDateTime(QString _date, QString _time)
+void SM_DEBUGCLASS::setDateTime(String _date, String _time)
 {
 //    sayln("set date-time");
 //    sayln("date >> " + _date);
 //    sayln("time >> " + _time);
 
-//    QQString command = "sudo date " + _date + _time + _year;
-//    system(command.toStdQString().c_str());
+//    QString command = "sudo date " + _date + _time + _year;
+//    system(command.toStdString().c_str());
 
 #ifdef Q_OS_OSX
 
 #else
-    QString command = "timedatectl set-ntp 0";
-    system(command.toStdQString().c_str());
+    String command = "timedatectl set-ntp 0";
+    system(command.toStdString().c_str());
 
     command = "date +%Y%m%d -s " + _date;
-    system(command.toStdQString().c_str());
+    system(command.toStdString().c_str());
 
     command = "date +%T -s " + _time;
-    system(command.toStdQString().c_str());
+    system(command.toStdString().c_str());
 #endif
 }
 
-void SM_DEBUG::delOldFile()
+void SM_DEBUGCLASS::delOldFile()
 {
     checkOldDir();
 }
 
-bool SM_DEBUG::checkAndMakeLogDir(QString path)
+bool SM_DEBUGCLASS::checkAndMakeLogDir(String path)
 {
     QDir dir(path);
     if(dir.exists()){
@@ -70,7 +70,7 @@ bool SM_DEBUG::checkAndMakeLogDir(QString path)
     return 0;
 }
 
-bool SM_DEBUG::checkAndWriteLogFile(QString path,QString data)
+bool SM_DEBUGCLASS::checkAndWriteLogFile(String path,String data)
 {
     QFile file(path);
     if(file.exists()){
@@ -111,7 +111,7 @@ bool SM_DEBUG::checkAndWriteLogFile(QString path,QString data)
     return 0;
 }
 
-QString SM_DEBUG::nextFileName(QString path)
+String SM_DEBUGCLASS::nextFileName(String path)
 {
     QDir dir(path);
 
@@ -149,7 +149,7 @@ QString SM_DEBUG::nextFileName(QString path)
     }
 }
 
-void SM_DEBUG::checkOldDir(void)
+void SM_DEBUGCLASS::checkOldDir(void)
 {
     QDir dir(log_path);
 
@@ -161,7 +161,7 @@ void SM_DEBUG::checkOldDir(void)
         if(dirList.at(i).size() > 2)
         {
             QFileInfo fileInfo(log_path+"/"+dirList.at(i));
-            //qDebug() << fileInfo.lastModified().toQString("dd_MM_yyyy");
+            //qDebug() << fileInfo.lastModified().toString("dd_MM_yyyy");
             if(fileInfo.lastModified().daysTo(QDateTime::currentDateTime()) >= _DAY_TO_DEL_DIR){
                 QDir oldDir(log_path+"/"+dirList.at(i));
                 qDebug() << "delete dir : " << fileInfo.absoluteFilePath();
@@ -173,7 +173,7 @@ void SM_DEBUG::checkOldDir(void)
     }
 }
 
-void SM_DEBUG::checkOldFile(QFileInfo fileInfo)
+void SM_DEBUGCLASS::checkOldFile(QFileInfo fileInfo)
 {
     QStringList files;
     files << "*.log";
@@ -185,7 +185,7 @@ void SM_DEBUG::checkOldFile(QFileInfo fileInfo)
     QStringRef _str;
     if(files2.size() > _FILE_NO_MAX){
         int no2Del = (int)files2.size() - _FILE_NO_MAX;
-        //qDebug() << "file no. = " << QQString("%1").arg(files2.size(),0,10);
+        //qDebug() << "file no. = " << QString("%1").arg(files2.size(),0,10);
         for( int i=0;i < files2.size();i++){
             _str = files2.at(i).leftRef(3);
             if(_str.toInt() > fileName.toInt()){
@@ -214,46 +214,46 @@ void SM_DEBUG::checkOldFile(QFileInfo fileInfo)
 
 //  public:
 
-void SM_DEBUG::setHeader(QString _header)
+void SM_DEBUGCLASS::setHeader(String _header)
 {
     header = _header;
 }
 
-void SM_DEBUG::setLogPath(QString _path)
+void SM_DEBUGCLASS::setLogPath(String _path)
 {
-    QString _str = "Set path log file to : ";
+    String _str = "Set path log file to : ";
     _str += _path;
     sayln(_str);
 
     log_path = _path;
 }
 
-void SM_DEBUG::say(QString _data)
+void SM_DEBUGCLASS::say(String _data)
 {
-    QString _str = setFormat(_data);
+    String _str = setFormat(_data);
     qDebug() << _str;
     emit logEvent(_str);
 }
 
-void SM_DEBUG::sayln(QString _data)
+void SM_DEBUGCLASS::sayln(String _data)
 {
     if(_data.indexOf("\r\n") == -1)
         _data += "\r\n";
     say(_data);
 }
 
-void SM_DEBUG::sayAndWriteLog(QString _data)
+void SM_DEBUGCLASS::sayAndWriteLog(String _data)
 {
     writeLog(_data);
     sayln(_data);
 }
 
-void SM_DEBUG::writeLog(QString _data)
+void SM_DEBUGCLASS::writeLog(QString _data)
 {
     if(STATIC_BOOL_LOG_CAN_WRITE)
     {
         QString _logPath = log_path + QDateTime::currentDateTime().toString("dd_MM_yyyy");
-        QString _str = setFormat(_data);
+        String _str = setFormat(_data);
         if(!checkAndMakeLogDir(_logPath))
         {
             sayln("Cannot make Log Dir.");
@@ -268,4 +268,3 @@ void SM_DEBUG::writeLog(QString _data)
         }
     }
 }
-

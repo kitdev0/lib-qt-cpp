@@ -70,8 +70,11 @@
 #define _PASS ""
 
 #elif _OPERATOR == _TRUE //True
-#define _APN "internet"
-#define _USER "True"
+//#define _APN "internet"
+//#define _USER "True"
+//#define _PASS "true"
+#define _APN "m2minternet"
+#define _USER "true"
 #define _PASS "true"
 
 #elif _OPERATOR == _AIS //AIS

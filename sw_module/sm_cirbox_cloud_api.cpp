@@ -401,8 +401,6 @@ void SM_CIRBOX_CLOUD_API::slotClientPing(void)
         }
     }
 
-    //debug("## ClientPing ##");
-
     String _url = "http://cirbox.cloud/api/v1/ping?serialno=" + serialno;
     String _api = "";
 
