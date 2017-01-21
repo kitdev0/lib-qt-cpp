@@ -64,6 +64,7 @@ public:
     ~SM_CIRBOX_CLOUD_API();
 
     SM_GSM_MODULE *ethernet;
+    bool cloud_box_ready = false;
 
     void setSerialNo(String _serial_no);
     bool syncTime(String _gmt);
@@ -72,6 +73,7 @@ public:
     bool setAPIData(String _table_no, String _api_id, String _data);
     uint16_t apiDataToSendAvailable(void);
     void clientPingResetTimer(void);
+    bool getCloudBoxReady(){return cloud_box_ready;}
 public slots:
     void slotReqUpdateAPI(QJsonDocument *_json_report);
 
@@ -103,6 +105,7 @@ signals:
     void signalResponseAPISuccess();
     void signalResponseAPIUnsuccess();
     void signalSetLEDServer(bool _state);
+    void signalConnectServerOK();
 private slots:
     void slotStartToCheckAPIBuff(void);
     void slotCheckAPIBuffToSend(void);

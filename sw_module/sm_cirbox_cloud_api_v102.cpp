@@ -10,7 +10,7 @@ SM_CIRBOX_CLOUD_API::SM_CIRBOX_CLOUD_API(SM_GSM_MODULE *my_ethernet, QObject *pa
 
     json_api_data = new QJsonObject;
 
-    connect(ethernet, SIGNAL(signalInternetIsOK()),this,SLOT(slotStartToCheckAPIBuff()));
+    connect(this, SIGNAL(signalConnectServerOK()),this,SLOT(slotStartToCheckAPIBuff()));
     connect(check_api_buff_to_send_timer, SIGNAL(timeout()),this,SLOT(slotCheckAPIBuffToSend()));
     connect(client_ping_pulling_timer,SIGNAL(timeout()),this,SLOT(slotClientPing()));
 }
@@ -227,9 +227,12 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
     String _url = "http://cirbox.cloud/api/v1/synctime?serialno=" + serialno + "&gmt=" + _gmt;
     String _api = "";
 
-    if(!ethernet->http->setURL(_url))
+    if(!ethernet->http->setURL(_url)){
+        ethernet->internet->resetConnecting();
         return 0;
+    }
     if(ethernet->http->getMethod(true) < 0){
+        ethernet->internet->resetConnecting();
         emit signalSetLEDServer(_LED_OFF);
         return 0;
     }
@@ -267,11 +270,14 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
             String _time = _hour + ":" + _minute + ":" + _second;
             logDebug->setDateTime(_date, _time);
             debug("Sysc Time - OK >> " + _date + " " + _time);
+            cloud_box_ready = true;
+            emit signalConnectServerOK();//Start to check api buffer
             emit signalSetLEDServer(_LED_ON);
             return 1;
         }
     }
     debug("Sysc Time - API Response error");
+    cloud_box_ready = false;
     return 0;
 }
 
@@ -316,7 +322,7 @@ bool SM_CIRBOX_CLOUD_API::setAPIData(String _table_no, String _api_id, String _d
 //    debug("set data of tran-report");
     if(_table_no.size() && _api_id.size() && _data.size())
     {
-
+        debug("# setAPIData");
         if(_api_id.indexOf("api") == -1){
             debug("api_id >> incorrect!!");
             return 0;
@@ -378,19 +384,19 @@ void SM_CIRBOX_CLOUD_API::slotClientPing(void)
 
     if(ethernet->moduleCannotUse()){
         ethernet->slotResetGsmModule();
-        client_ping_pulling_timer->start(_CLIENT_PING_PULLING_TIME);
+        clientPingResetTimer();
         return;
     }
 
     if(flag_wait_to_read_response){
-        client_ping_pulling_timer->start(_CLIENT_PING_PULLING_TIME);
+        clientPingResetTimer();
         return;
     }
 
     if(!ethernet->internet->isConnect()){
         if(!ethernet->internet->connect()){
             //debug("Can't connect internet!!");
-            client_ping_pulling_timer->start(_CLIENT_PING_PULLING_TIME);
+            clientPingResetTimer();
             return;
         }
     }
@@ -400,9 +406,14 @@ void SM_CIRBOX_CLOUD_API::slotClientPing(void)
     String _url = "http://cirbox.cloud/api/v1/ping?serialno=" + serialno;
     String _api = "";
 
-    if(!ethernet->http->setURL(_url))
+    if(!ethernet->http->setURL(_url)){
+        ethernet->internet->resetConnecting();
+        clientPingResetTimer();
         return;
+    }
     if(ethernet->http->getMethod(true) < 0){
+        ethernet->internet->resetConnecting();
+        clientPingResetTimer();
         emit signalSetLEDServer(_LED_OFF);
         return;
     }
@@ -412,5 +423,3 @@ void SM_CIRBOX_CLOUD_API::slotClientPing(void)
 
     clientPingResetTimer();
 }
-
-
