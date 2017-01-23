@@ -93,7 +93,7 @@ bool SM_UC20_AT_INTERNET_CLASS::connect(void)
 	}
     else{
         debug("Set Connect internet >> Faile");
-        emit signalResetGsmModule();
+        //emit signalResetGsmModule();
     }
 	return _res;
 }
@@ -179,12 +179,12 @@ String SM_UC20_AT_INTERNET_CLASS::getIP()
             }
             else if (_str.indexOf("OK") != -1)
             {
-                debug("Get IP >> Internet disconnect!!");
+                debug("Check IP >> Internet disconnect!!");
                 return "";
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_OK_TIMEOUT + 5000)){
-            debug("Get IP >> Response timeout!!");
+            debug("Check IP >> Response timeout!!");
             return "";
         }
 	}
