@@ -13,6 +13,7 @@ SM_CIRBOX_CLOUD_API::SM_CIRBOX_CLOUD_API(SM_GSM_MODULE *my_ethernet, QObject *pa
     connect(this, SIGNAL(signalConnectServerOK()),this,SLOT(slotStartToCheckAPIBuff()));
     connect(check_api_buff_to_send_timer, SIGNAL(timeout()),this,SLOT(slotCheckAPIBuffToSend()));
     connect(client_ping_pulling_timer,SIGNAL(timeout()),this,SLOT(slotClientPing()));
+    connect(ethernet,SIGNAL(signalInternetIsOK()),this,SLOT(slotSyncTime()));
 }
 
 SM_CIRBOX_CLOUD_API::~SM_CIRBOX_CLOUD_API()
@@ -111,6 +112,9 @@ void SM_CIRBOX_CLOUD_API::slotStartToCheckAPIBuff(void)
 
 void SM_CIRBOX_CLOUD_API::slotCheckAPIBuffToSend(void)
 {
+    if(!cloud_box_ready){
+        return;
+    }
     if(ethernet->moduleCannotUse()){
         ethernet->slotResetGsmModule();
         return;
@@ -301,7 +305,7 @@ bool SM_CIRBOX_CLOUD_API::reqUpdateAPIData(void)
         return 1;
     }
     else{
-        debug("Json data >> empty!!");
+        debug("reqUpdateAPIData - Json data >> empty!!");
         return 0;
     }
 }
@@ -378,7 +382,7 @@ void SM_CIRBOX_CLOUD_API::slotReqUpdateAPI(QJsonDocument *_json_report)
         slotCheckAPIBuffToSend();
     }
     else{
-        debug("Json data >> empty!!");
+        debug("slotReqUpdateAPI - Json data >> empty!!");
     }
 }
 
@@ -424,4 +428,20 @@ void SM_CIRBOX_CLOUD_API::slotClientPing(void)
     QTimer::singleShot(_READ_METHOD_DELAY_TIME,this,SLOT(slotReadResponseAPIClientPing()));
 
     clientPingResetTimer();
+}
+
+void SM_CIRBOX_CLOUD_API::slotSyncTime(void)
+{
+    if(cloud_box_ready == false)
+    {
+        if(!ethernet->internet->isConnect())
+            ethernet->internet->connect();
+
+        if(!syncTime("+7")){
+            QTimer::singleShot(2000,this,SLOT(slotSyncTime()));
+        }
+        else{
+            ethernet->internet->disConnect();
+        }
+    }
 }
