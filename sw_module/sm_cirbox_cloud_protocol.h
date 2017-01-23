@@ -96,6 +96,7 @@ private slots:
     void slotCheckComport();
     void slotReturnReady();
     void slotReturnBusy();
+    void slotSerialError(QSerialPort::SerialPortError _error);
 };
 
 #endif // SM_CIRBOX_CLOUD_PROTOCOL_H

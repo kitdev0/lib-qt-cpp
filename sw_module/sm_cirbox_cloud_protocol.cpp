@@ -20,6 +20,7 @@ SM_CIRBOX_CLOUD_PROTOCOL::SM_CIRBOX_CLOUD_PROTOCOL(SM_CIRBOX_CLOUD_API *api_port
     connect(this,SIGNAL(signalGetDataValue(String)),this,SLOT(slotGetDataValue(String)));
     connect(this,SIGNAL(signalSetDataValue(String)),this,SLOT(slotSetDataValue(String)));
     connect(check_comport_timer,SIGNAL(timeout()),this,SLOT(slotCheckComport()));
+    connect(cb_serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this,SLOT(slotSerialError(QSerialPort::SerialPortError)));
 }
 
 SM_CIRBOX_CLOUD_PROTOCOL::~SM_CIRBOX_CLOUD_PROTOCOL()
@@ -78,6 +79,7 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
 
     if(_port_list.size() == 0){
         debug("Can't find serial port device!!");
+        check_comport_timer->start(_CHECK_COMPORT_TIMER);
         return 0;
     }
 
@@ -297,6 +299,16 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotCheckComport()
 {
     check_comport_timer->stop();
     tryToConnect();
+}
+
+void SM_CIRBOX_CLOUD_PROTOCOL::slotSerialError(QSerialPort::SerialPortError _error)
+{
+    if (_error == QSerialPort::ResourceError) {
+        debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");
+        debug("Error : " + cb_serial_port->errorString());
+        cb_serial_port->close();
+        check_comport_timer->start(_CHECK_COMPORT_TIMER);
+    }
 }
 
 // private slot //
