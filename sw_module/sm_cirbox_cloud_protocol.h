@@ -62,6 +62,7 @@ private:
     QTimer *check_comport_timer;
 
     bool is_begin = false;
+    bool flag_client_is_connected = false;
     int8_t machine_client_connect_ok = -1;
 
     uint32_t cb_serial_baud;
@@ -78,6 +79,7 @@ signals:
     void signalGetDataValue(String _str);
     void signalSetLEDClient(bool _state);
     void signalReportDataToCloud(QJsonDocument *_json_doc);
+    void signalClientISConnect();
 
 public slots:
 
@@ -92,6 +94,8 @@ private slots:
     void slotReturnUnsuccess();
     void slotCheckClientTimeout();
     void slotCheckComport();
+    void slotReturnReady();
+    void slotReturnBusy();
 };
 
 #endif // SM_CIRBOX_CLOUD_PROTOCOL_H
