@@ -172,17 +172,21 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadCBProtocol(String _str)
     }
     else if(_str.indexOf(cmd.STATE) != -1){
         debug("# << cmd.STATE");
-        emit signalReturnOK();
+        if(!flag_client_is_connected){
+            flag_client_is_connected = true;
+            emit signalClientISConnect();
+        }
+        slotReturnOK();
     }
     else if(_str.indexOf(cmd.READY) != -1){
         debug("# << cmd.READY");
         if(api->getCloudBoxReady()){
             debug("# << CloudBox Ready");
-            emit signalReturnOK();
+            slotReturnReady();
         }
         else{
             debug("# << CloudBox Not Ready !!");
-            emit signalReturnError();
+            slotReturnBusy();
         }
     }
 }
@@ -190,12 +194,24 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadCBProtocol(String _str)
 void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnOK()
 {
 //    debug("<< OK");
-    sendData("\r\nOK\r\n");
+    sendData("OK\r\n");
+}
+
+void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnReady()
+{
+//    debug("<< OK");
+    sendData("READY\r\n");
+}
+
+void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnBusy()
+{
+//    debug("<< OK");
+    sendData("BUSY\r\n");
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnError()
 {
-    sendData("\r\nERROR\r\n");
+    sendData("ERROR\r\n");
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotGetDataValue(String _str)
