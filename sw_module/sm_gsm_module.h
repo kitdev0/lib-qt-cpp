@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QTimer>
 
 #include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
 #include "sm_uc20_at_sim.h"
@@ -59,10 +60,10 @@ public:
     SM_UC20_AT_HTTP_CLASS *http = new SM_UC20_AT_HTTP_CLASS(&uc20_module);
     SM_UC20_AT_FILE_CLASS *file = new SM_UC20_AT_FILE_CLASS(&uc20_module);
 
-    bool init(void);
-    bool setInternet(void);
+//    bool init(void);
     inline bool moduleIsReady(void){return module_is_ready;}
     inline bool moduleCannotUse(void){return flag_gsm_module_cannot_use;}
+    inline bool packetNetworkIsRegis(void){return flag_packet_network_is_regis;}
 
 private:    
     HM_UC20CLASS uc20_module;
@@ -71,17 +72,25 @@ private:
     SM_DEBUGCLASS *logDebug;
 #endif // _GSM_MODULE_DEBUG
 
+    QElapsedTimer packet_network_regis_timer;
+
     bool flag_gsm_module_cannot_use = false;
     bool module_is_ready = false;
+    bool flag_packet_network_is_regis = false;
+    uint8_t packet_network_regis_try_cnt = 0;
     void debug(String data);
 
 signals:
     void signalInternetIsOK(void);
     void signalSetLEDGsm(bool _state);
-    void signalGetNetworkRegisOK();
+    void signalPacketNetworkIsRegis();
 
 public slots:
     void slotResetGsmModule();
+    bool slotInit();
+private slots:
+    void slotSetPacketNetworkRegis();
+    void slotSetInternet();
 };
 
 #endif // SM_GSM_MODULE_H
