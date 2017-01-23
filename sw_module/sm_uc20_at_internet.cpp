@@ -80,22 +80,27 @@ bool SM_UC20_AT_INTERNET_CLASS::connect(void)
 {
     QElapsedTimer _timer;
 //    debug("Set to open internet");
-	bool _res = 0;
     if(!gsmModule->sendData("AT+QIACT=1",1)){
         debug("Set Connect internet >> Faile");
         return 0;
     }
     _timer.start();
-	if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000)){
+    if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000)){
         debug("Set Connect internet >> OK");
         debug("wait time : " + String::number(_timer.elapsed()));
-		_res = 1;
+        return 1;
 	}
     else{
-        debug("Set Connect internet >> Faile");
+        _timer.start();
+        if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000)){
+            debug("Set Connect internet >> OK");
+            debug("wait time : " + String::number(_timer.elapsed()));
+            return 1;
+        }
+        debug("Set Connect internet >> Faile!!");
+        return 0;
         //emit signalResetGsmModule();
     }
-	return _res;
 }
 
 bool SM_UC20_AT_INTERNET_CLASS::disConnect()
