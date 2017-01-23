@@ -112,6 +112,7 @@ private slots:
     void slotReadResponseAPI(void);
     void slotReadResponseAPIClientPing(void);
     void slotClientPing(void);
+    void slotSyncTime();
 };
 
 #endif // SM_CIRBOX_CLOUD_API_H
