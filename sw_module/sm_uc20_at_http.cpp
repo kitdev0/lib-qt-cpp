@@ -221,7 +221,7 @@ bool SM_UC20_AT_HTTP_CLASS::setURL(String _url)
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("setURL >> Response timeout!!");
+            debug("setURL-1 >> Response timeout!!");
             return 0;
         }
 	}
@@ -267,7 +267,7 @@ bool SM_UC20_AT_HTTP_CLASS::setURL(String _url, bool _wait_flag)
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("setURL >> Response timeout!!");
+            debug("setURL-2 >> Response timeout!!");
             return 0;
         }
 	}
@@ -322,7 +322,7 @@ bool SM_UC20_AT_HTTP_CLASS::saveResponseToMemory(FILE_PATTERN_t pattern, String 
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("Response timeout!!");
+            debug("saveResponseToMemory >> Response timeout!!");
             return 0;
         }
 	}
@@ -354,7 +354,7 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethod(bool _wait_flag)
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT + 5000)){
-            debug("Response timeout!!");
+            debug("getMethod >> Response timeout!!");
             return -2;
         }
 	}
@@ -393,7 +393,7 @@ String SM_UC20_AT_HTTP_CLASS::readMethod(bool _wait_flag)
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("Response timeout!!");
+            debug("readMethod >> Response timeout!!");
             return "";
         }
 	}

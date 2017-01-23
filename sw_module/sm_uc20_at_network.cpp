@@ -62,7 +62,7 @@ bool SM_UC20_AT_NETWORK_CLASS::getNetworkRegis(void)	//CREG?
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_OK_TIMEOUT + 5000)){
-            debug("Response timeout!!");
+            debug("getNetworkRegis [ network ] >> Response timeout!!");
             return 0;
         }
 	}
@@ -94,7 +94,7 @@ uint8_t SM_UC20_AT_NETWORK_CLASS::getSignalQuality(void)
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_OK_TIMEOUT + 5000)){
-            debug("Response timeout!!");
+            debug("getSignalQuality >> Response timeout!!");
             return _signal;
         }
 	}
@@ -132,7 +132,7 @@ String SM_UC20_AT_NETWORK_CLASS::getOperator(void)
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_OK_TIMEOUT + 5000)){
-            debug("Response timeout!!");
+            debug("getOperator >> Response timeout!!");
             return "";
         }
 

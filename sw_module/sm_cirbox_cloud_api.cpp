@@ -228,10 +228,12 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
     String _api = "";
 
     if(!ethernet->http->setURL(_url)){
+        debug("getTimeZone >> Unsuccess !!");
         ethernet->internet->resetConnecting();
         return 0;
     }
     if(ethernet->http->getMethod(true) < 0){
+        debug("getTimeZone >> Unsuccess !!");
         ethernet->internet->resetConnecting();
         emit signalSetLEDServer(_LED_OFF);
         return 0;
@@ -269,14 +271,16 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
             String _date = _year + _month + _day;
             String _time = _hour + ":" + _minute + ":" + _second;
             logDebug->setDateTime(_date, _time);
-            debug("Sysc Time - OK >> " + _date + " " + _time);
+            debug("getTimeZone >> Success");
+            debug("Sysc Time >> " + _date + " " + _time);
             cloud_box_ready = true;
             emit signalConnectServerOK();//Start to check api buffer
             emit signalSetLEDServer(_LED_ON);
             return 1;
         }
     }
-    debug("Sysc Time - API Response error");
+    debug("getTimeZone >> Sysc Time - API Response error");
+    debug("getTimeZone >> Unsuccess !!");
     cloud_box_ready = false;
     return 0;
 }

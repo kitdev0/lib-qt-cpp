@@ -29,11 +29,11 @@ void SM_UC20_AT_PACKET_CLASS::debug(String data)
 #endif
 }
 
-bool SM_UC20_AT_PACKET_CLASS::getNetworkRegis(void)	//CREG?
+bool SM_UC20_AT_PACKET_CLASS::getNetworkRegis(void)	//CGREG?
 {
 	uint8_t _state = 0;
 
-    debug("get Network-Regis-Status");
+    debug("get Network-Regis-Status - Packet");
 
     if(!gsmModule->sendData("AT+CGREG?",1))
         return 0;
@@ -62,7 +62,7 @@ bool SM_UC20_AT_PACKET_CLASS::getNetworkRegis(void)	//CREG?
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_OK_TIMEOUT + 5000)){
-            debug("Response timeout!!");
+            debug("getNetworkRegis [ packet ] >> Response timeout!!");
             return 0;
         }
 	}

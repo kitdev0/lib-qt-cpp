@@ -171,17 +171,17 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadCBProtocol(String _str)
         emit signalGetDataValue(_str);
     }
     else if(_str.indexOf(cmd.STATE) != -1){
-//        debug("# << cmd.STATE");
+        debug("# << cmd.STATE");
         emit signalReturnOK();
     }
     else if(_str.indexOf(cmd.READY) != -1){
-//        debug("# << cmd.READY");
+        debug("# << cmd.READY");
         if(api->getCloudBoxReady()){
-//            debug("# << CloudBox Ready");
+            debug("# << CloudBox Ready");
             emit signalReturnOK();
         }
         else{
-//            debug("# << CloudBox Not Ready !!");
+            debug("# << CloudBox Not Ready !!");
             emit signalReturnError();
         }
     }

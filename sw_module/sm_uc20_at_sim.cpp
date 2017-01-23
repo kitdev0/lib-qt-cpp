@@ -61,7 +61,7 @@ bool SM_UC20_AT_SIM_CLASS::getSIMState(void)	//CPIN?
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_OK_TIMEOUT + 5000)){
-            debug("Response timeout!!");
+            debug("getSIMState >> Response timeout!!");
             return 0;
         }
 	}
@@ -89,7 +89,7 @@ String SM_UC20_AT_SIM_CLASS::getCCID(void)				//QCCID
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_OK_TIMEOUT + 5000)){
-            debug("Response timeout!!");
+            debug("getCCID >> Response timeout!!");
             return "";
         }
 	}

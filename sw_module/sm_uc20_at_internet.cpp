@@ -82,17 +82,17 @@ bool SM_UC20_AT_INTERNET_CLASS::connect(void)
 //    debug("Set to open internet");
 	bool _res = 0;
     if(!gsmModule->sendData("AT+QIACT=1",1)){
-        debug("Can't set to open internet!!");
+        debug("Set Connect internet >> Faile");
         return 0;
     }
     _timer.start();
 	if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000)){
-        debug("Open internet >> OK");
+        debug("Set Connect internet >> OK");
         debug("wait time : " + String::number(_timer.elapsed()));
 		_res = 1;
 	}
     else{
-        debug("Can't open internet!!");
+        debug("Set Connect internet >> Faile");
         emit signalResetGsmModule();
     }
 	return _res;
@@ -100,10 +100,20 @@ bool SM_UC20_AT_INTERNET_CLASS::connect(void)
 
 bool SM_UC20_AT_INTERNET_CLASS::disConnect()
 {
-    debug("disconnect");
-    if(!gsmModule->sendData("AT+QIDEACT=1",1))
+//    debug("Set - Disable Internet");
+    if(!gsmModule->sendData("AT+QIDEACT=1",1)){
+        debug("Set Disable internet >> Faile");
         return 0;
-	return(gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000));
+    }
+
+    if(gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000)){
+        debug("Set Disable internet >> Success");
+        return 1;
+    }
+    else{
+        debug("Set Disable internet >> Faile");
+        return 0;
+    }
 }
 
 bool SM_UC20_AT_INTERNET_CLASS::isConnect(void)
