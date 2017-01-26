@@ -87,25 +87,26 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
     {
 //        if(_port_list[i] != api->ethernet->module->serial_port->portName())
 //        {
-            cb_serial_port->setPortName(_port_list[i]);
-            cb_serial_port->setBaudRate(cb_serial_baud);
-            cb_serial_port->setParity(QSerialPort::NoParity);
-            if (cb_serial_port->open(QIODevice::ReadWrite)){
-                cb_serial_port->setDataTerminalReady(true);
-                debug("Port name : " + _port_list[i]);
-                debug("Open port >> passed");
-                //connect(serial_port, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
-                connect(api,SIGNAL(signalResponseAPISuccess()),this,SLOT(slotReturnSuccess()));
-                connect(api,SIGNAL(signalResponseAPIUnsuccess()),this,SLOT(slotReturnUnsuccess()));
-                return true;
-            }
-            else{
-                debug("Port name : " + _port_list[i]);
-                debug("Open port >> failed");
-                debug("Error : " + cb_serial_port->errorString());
-                cb_serial_port->close();
-                check_comport_timer->start(_CHECK_COMPORT_TIMER);
-            }
+        cb_serial_port->setPortName(_port_list[i]);
+        cb_serial_port->setBaudRate(cb_serial_baud);
+        cb_serial_port->setParity(QSerialPort::NoParity);
+        if (cb_serial_port->open(QIODevice::ReadWrite)){
+            //cb_serial_port->setDataTerminalReady(true);
+            cb_serial_port->setDataTerminalReady(true);
+            debug("Port name : " + _port_list[i]);
+            debug("Open port >> passed");
+            //connect(serial_port, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
+            connect(api,SIGNAL(signalResponseAPISuccess()),this,SLOT(slotReturnSuccess()));
+            connect(api,SIGNAL(signalResponseAPIUnsuccess()),this,SLOT(slotReturnUnsuccess()));
+            return true;
+        }
+        else{
+            debug("Port name : " + _port_list[i]);
+            debug("Open port >> failed");
+            debug("Error : " + cb_serial_port->errorString());
+            cb_serial_port->close();
+            check_comport_timer->start(_CHECK_COMPORT_TIMER);
+        }
 //        }
     }
     return false;
@@ -173,7 +174,7 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadCBProtocol(String _str)
         emit signalGetDataValue(_str);
     }
     else if(_str.indexOf(cmd.STATE) != -1){
-        debug("# << cmd.STATE");
+//        debug("# << cmd.STATE");
         if(!flag_client_is_connected){
             flag_client_is_connected = true;
             emit signalClientISConnect();
@@ -181,13 +182,13 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadCBProtocol(String _str)
         slotReturnOK();
     }
     else if(_str.indexOf(cmd.READY) != -1){
-        debug("# << cmd.READY");
+//        debug("# << cmd.READY");
         if(api->getCloudBoxReady()){
-            debug("# << CloudBox Ready");
+//            debug("# << CloudBox Ready");
             slotReturnReady();
         }
         else{
-            debug("# << CloudBox Not Ready !!");
+//            debug("# << CloudBox Not Ready !!");
             slotReturnBusy();
         }
     }
