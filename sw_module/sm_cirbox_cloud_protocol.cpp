@@ -134,7 +134,7 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadSerialPort(void)
                 QJsonObject _json_object;
 
                 machine_client_connect_ok = 1;
-                _json_object.insert("table_no","3");
+                _json_object.insert("table_no","1");
                 _json_object.insert("api01","ONLINE");
 
                 _json_report.setObject(_json_object);
@@ -284,7 +284,7 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotCheckClientTimeout()
         QJsonObject _json_object;
 
         machine_client_connect_ok = 0;
-        _json_object.insert("table_no","3");
+        _json_object.insert("table_no","1");
         _json_object.insert("api01","OFFLINE");
 
         _json_report.setObject(_json_object);
