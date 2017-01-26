@@ -43,7 +43,7 @@ void HM_UC20CLASS::timeoutReset(void)
     timer0.start();
 }
 
-void HM_UC20CLASS::setPwrPinActive(void)
+void HM_UC20CLASS::setPwrKeyPinActive(void)
 {
     gpio.digitalWrite(pwr_key,_LOW);
     SM_DELAY::delay_ms(2000);
@@ -294,7 +294,7 @@ String HM_UC20CLASS::receiveStringUntil(String _data)
     return "";
 }
 
-void HM_UC20CLASS::setPwrPin(uint16_t _pin)
+void HM_UC20CLASS::setPwrKeyPin(uint16_t _pin)
 {
     debug("set Pwr-Pin >> " + String(_pin));
     if(is_begin)
@@ -305,15 +305,15 @@ void HM_UC20CLASS::setPwrPin(uint16_t _pin)
     gpio.digitalWrite(pwr_key, _LOW);
 }
 
-bool HM_UC20CLASS::setPwr(bool _value)
+bool HM_UC20CLASS::setPwrKey(bool _value)
 {
 	uint8_t _tryCnt = 0;
 	bool _flag = false;
 	if(_value)
-        debug("set Power >> ON");
+        debug("set Power Key >> ON");
 	else
-        debug("set Power >> OFF");
-    setPwrPinActive();
+        debug("set Power Key >> OFF");
+    setPwrKeyPinActive();
 
     while (1)
 	{
@@ -329,7 +329,7 @@ bool HM_UC20CLASS::setPwr(bool _value)
 					break;
 				}
 				else
-					setPwrPinActive();
+                    setPwrKeyPinActive();
 			}
             else if (_str.indexOf("POWERED DOWN") != -1)
 			{
@@ -339,7 +339,7 @@ bool HM_UC20CLASS::setPwr(bool _value)
 					break;
 				}
 				else
-					setPwrPinActive();
+                    setPwrKeyPinActive();
 			}
 
 		}
@@ -350,13 +350,37 @@ bool HM_UC20CLASS::setPwr(bool _value)
                 break;
             }
             else{
-                setPwrPinActive();
+                setPwrKeyPinActive();
                 timeoutReset();
                 _tryCnt++;
             }
         }
 	}
-	return _flag;
+    return _flag;
+}
+
+void HM_UC20CLASS::setPwrOn()
+{
+    uint16_t _pwr_pin = _GSM_PWR_PIN;
+    debug("set Power >> On");
+    if(flag_power_pin_is_export)
+        gpio.pinUnExport(_pwr_pin);
+    gpio.pinExport(_pwr_pin);
+    gpio.pinMode(_pwr_pin, _OUTPUT);
+    gpio.digitalWrite(_pwr_pin,_HIGH);
+    flag_power_pin_is_export = true;
+}
+
+void HM_UC20CLASS::setPwrOff()
+{
+    uint16_t _pwr_pin = _GSM_PWR_PIN;
+    debug("set Power >> Off");
+    if(flag_power_pin_is_export)
+        gpio.pinUnExport(_pwr_pin);
+    gpio.pinExport(_pwr_pin);
+    gpio.pinMode(_pwr_pin, _OUTPUT);
+    gpio.digitalWrite(_pwr_pin,_LOW);
+    flag_power_pin_is_export = true;
 }
 
 bool HM_UC20CLASS::waitToReady(uint32_t _wait_time)
@@ -375,7 +399,7 @@ bool HM_UC20CLASS::waitToReady(uint32_t _wait_time)
 			}
             else if (_str.indexOf("POWERED DOWN") != -1)
 			{
-                setPwr(_HIGH);
+                setPwrKey(_HIGH);
 			}
 		}
         else if(!serial_port->waitForReadyRead(_wait_time)){

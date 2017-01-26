@@ -74,7 +74,7 @@ void SM_GSM_MODULE::slotResetGsmModule()
 
     for(int i=0; i < _TRY_TO_RESET_GSM_TIME; i++)
     {
-        if(module->setPwr(_LOW))
+        if(module->setPwrKey(_LOW))
         {
             if(slotInit())
             {
@@ -98,7 +98,7 @@ bool SM_GSM_MODULE::slotInit(void)
     }
 
 #ifdef Q_OS_LINUX
-    if (!module->setPwr(_HIGH)){
+    if (!module->setPwrKey(_HIGH)){
         debug("Set power - Fail");
         //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;

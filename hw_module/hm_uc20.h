@@ -102,6 +102,10 @@
 #define _GSM_PWK_PIN    50
 #endif
 
+#ifndef _GSM_PWR_PIN
+#define _GSM_PWR_PIN    111
+#endif
+
 enum FILE_PATTERN_t
 {
     _UFS,
@@ -135,7 +139,7 @@ public:
 
     inline bool isBegin(void) {return is_begin;}
     inline bool isConnected(void) {return is_connected;}
-    void setPwrPin(uint16_t _pin);
+    void setPwrKeyPin(uint16_t _pin);
     void timeoutStart(void);
     void timeoutReset(void);
     void clrSerialBuffer(void);
@@ -152,7 +156,9 @@ public:
     bool waitOK(uint32_t _time, bool _ack);
     bool timeoutCheck(uint32_t _time);
     bool waitToReady(uint32_t _wait_time);
-    bool setPwr(bool _value);
+    bool setPwrKey(bool _value);
+    void setPwrOn(void);
+    void setPwrOff(void);
     bool setURCPort(URC_t _port);		//QURCCFG=_port
     bool setEcho(bool _value);			//ATEn
     bool setPhoneFunc(uint8_t _value);	//CFUN=_value
@@ -167,13 +173,13 @@ private:
     HM_GPIO gpio;
     bool is_begin = false;
     bool is_connected = false;
-
+    bool flag_power_pin_is_export = false;
     uint32_t serial_baud;
     uint32_t previous_time;
     uint16_t pwr_key = 0;
 
     void debug(QString data);
-    void setPwrPinActive(void);
+    void setPwrKeyPinActive(void);
     bool simpleCommand(void);
     bool tryToConnect(void);
     bool connectToGSMPort(void);
