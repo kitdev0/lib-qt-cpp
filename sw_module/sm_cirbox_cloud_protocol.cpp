@@ -304,12 +304,10 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotCheckComport()
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotSerialError(QSerialPort::SerialPortError _error)
 {
-    if (_error == QSerialPort::ResourceError) {
-        debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");
-        debug("Error : " + cb_serial_port->errorString());
-        cb_serial_port->close();
-        check_comport_timer->start(_CHECK_COMPORT_TIMER);
-    }
+    debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");
+    debug("Error : " + cb_serial_port->errorString());
+    cb_serial_port->close();
+    check_comport_timer->start(_CHECK_COMPORT_TIMER);
 }
 
 // private slot //
