@@ -96,6 +96,7 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
             debug("Port name : " + _port_list[i]);
             debug("Open port >> passed");
             //connect(serial_port, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
+            //connect(cb_serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this,SLOT(slotSerialError(QSerialPort::SerialPortError)));
             connect(api,SIGNAL(signalResponseAPISuccess()),this,SLOT(slotReturnSuccess()));
             connect(api,SIGNAL(signalResponseAPIUnsuccess()),this,SLOT(slotReturnUnsuccess()));
             return true;
@@ -304,10 +305,22 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotCheckComport()
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotSerialError(QSerialPort::SerialPortError _error)
 {
-    debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");
-    debug("Error : " + cb_serial_port->errorString());
-    cb_serial_port->close();
-    check_comport_timer->start(_CHECK_COMPORT_TIMER);
+    if (_error == QSerialPort::ResourceError || _error == QSerialPort::UnknownError) {
+        debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");
+        debug("Error : " + cb_serial_port->errorString());
+        cb_serial_port->close();
+        check_comport_timer->start(_CHECK_COMPORT_TIMER);
+    }
+//    if(_error == )
+//    debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");
+//    debug("Error : " + cb_serial_port->errorString());
+//    //cb_serial_port->disconnect(SLOT(slotSerialError(QSerialPort::SerialPortError)));
+//    //disconnect(cb_serial_port,0,0,0);
+//    //disconnect(cb_serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this,SLOT(slotSerialError(QSerialPort::SerialPortError)));
+//    if(cb_serial_port->isOpen())
+//        cb_serial_port->close();
+//    check_comport_timer->start(_CHECK_COMPORT_TIMER);
+    //disconnect()
 }
 
 // private slot //
