@@ -189,7 +189,7 @@ void SM_CLIENT_MQTT_API::slotCheckStatusData(QJsonDocument *_json_doc)
         QJsonDocument _json_report;
         QJsonObject _json_object;
 
-        _json_object.insert("table_no","2");
+        _json_object.insert("table_no","1");
         _json_object.insert("api01",machine_status[_array].c_status);
         _json_object.insert("api02",_id);
         _json_object.insert("api03",machine_status[_array].m_status);
@@ -215,7 +215,7 @@ void SM_CLIENT_MQTT_API::slotCheckClientTimeout(void)
             machine_status[i].m_status = "NULL";
             machine_status[i].e_code = "NULL";
 
-            _json_object.insert("table_no","2");
+            _json_object.insert("table_no","1");
             _json_object.insert("api01",machine_status[i].c_status);
             _json_object.insert("api02",machine_status[i].id);
             _json_object.insert("api03",machine_status[i].m_status);
