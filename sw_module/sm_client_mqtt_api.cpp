@@ -77,7 +77,7 @@ void SM_CLIENT_MQTT_API::slotMqttReceived(const QMQTT::Message & _message)
     if(_topic.indexOf("report") != -1){
         String _id = _json_api.value("1").toString();
 //        debug("topic >> " + _topic);
-//        debug("payload >> " + _payload);
+        debug("# Get Report-Topic : Payload = " + _payload);
         returnMessage(_id,_MESSAGE_SUCCESS);
         emit signalCheckReportData(&_json_doc);
     }
