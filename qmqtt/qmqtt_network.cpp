@@ -135,7 +135,7 @@ void Network::sockConnected()
 
 void Network::sockReadReady()
 {
-    qCDebug(network) << "sockReadReady...";
+    //qCDebug(network) << "sockReadReady...";
     QDataStream in(_socket);
     QDataStream out(_buffer);
     while(!_socket->atEnd())
@@ -158,7 +158,7 @@ void Network::sockReadReady()
             _buffer->reset();
             Frame frame(_header, _buffer->buffer());
             _buffer->buffer().clear();
-            qCDebug(network) << "network emit received(frame), header: " << _header;
+            //qCDebug(network) << "network emit received(frame), header: " << _header;
             emit received(frame);
         }
     }
