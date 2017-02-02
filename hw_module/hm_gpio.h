@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QIODevice>
 
-#include "../../../../lib-qt-cpp/sw_module/sm_debug.h"
+#include "../../../../../lib-qt-cpp/sw_module/sm_debug.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0

@@ -3,7 +3,7 @@
 #ifndef SM_UC20_AT_SIM_H
 #define SM_UC20_AT_SIM_H
 
-#include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+#include "../../../../../lib-qt-cpp/hw_module/hm_uc20.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0

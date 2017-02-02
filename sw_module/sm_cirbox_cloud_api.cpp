@@ -56,7 +56,7 @@ String SM_CIRBOX_CLOUD_API::responseMessage(QJsonDocument *_json_response)
 uint8_t SM_CIRBOX_CLOUD_API::responseCmd(QJsonDocument *_json_response)
 {
     uint8_t _cmd = _json_response->object().value(String("cmd")).toInt();
-    debug("response cmd >> " + String::number(_cmd,10));
+    //debug("response cmd >> " + String::number(_cmd,10));
     return _cmd;
 }
 
@@ -114,21 +114,22 @@ String SM_CIRBOX_CLOUD_API::getMachineTime(void)
 
 void SM_CIRBOX_CLOUD_API::checkToExecuteCmd(uint8_t _cmd)
 {
-    String command = "";
     switch (_cmd)
     {
     case 1://shutdown
-        debug("Shutdown");
-        command = "sudo shutdown -r";
-        system(command.toStdString().c_str());
+        debug("!! Shutdown !!");
+        emit signalOffLEDAll();
+        flag_set_led_off_all = true;
+        QTimer::singleShot(5000,this,SLOT(slotCloudBoxShutdown()));
         break;
     case 2://reboot
-        debug("Reboot");
-        command = "sudo reboot";
-        system(command.toStdString().c_str());
+        debug("!! Reboot !!");
+        emit signalOffLEDAll();
+        flag_set_led_off_all = true;
+        QTimer::singleShot(5000,this,SLOT(slotCloudBoxReboot()));
         break;
     default:
-        debug("CMD Not found");
+        debug("!! CMD Not found !!");
         break;
     }
 }
@@ -136,6 +137,18 @@ void SM_CIRBOX_CLOUD_API::checkToExecuteCmd(uint8_t _cmd)
 //private
 
 //private slot
+void SM_CIRBOX_CLOUD_API::slotCloudBoxShutdown(void)
+{
+    String command = "sudo shutdown now";
+    system(command.toStdString().c_str());
+}
+
+void SM_CIRBOX_CLOUD_API::slotCloudBoxReboot(void)
+{
+    String command = "sudo reboot";
+    system(command.toStdString().c_str());
+}
+
 void SM_CIRBOX_CLOUD_API::slotStartToCheckAPIBuff(void)
 {
     check_api_buff_to_send_timer->start(_CHECK_API_BUFF_TO_SEND_TIMER);
@@ -232,9 +245,15 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPIClientPing()
             debug("Client Ping - Json Response error");
         }
         else{
-            checkToExecuteCmd(responseCmd(&_json_response));
+            uint8_t _cmd = responseCmd(&_json_response);
+            if(_cmd > 0){
+                debug("response cmd >> " + String::number(_cmd,10));
+                checkToExecuteCmd(_cmd);
+            }
         }
-        emit signalSetLEDServer(_LED_ON);
+
+        if(!flag_set_led_off_all)
+            emit signalSetLEDServer(_LED_ON);
     }
     else{
         debug("ClientPing >> Response data is empty!!");

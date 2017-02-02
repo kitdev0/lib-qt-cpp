@@ -86,6 +86,7 @@ private:
 
     bool flag_wait_to_read_response = false;
     bool flag_send_api_data = true;
+    bool flag_set_led_off_all = false;
 
     uint8_t last_api_url_set = 0;
 
@@ -111,6 +112,7 @@ signals:
     void signalResponseAPIUnsuccess();
     void signalSetLEDServer(bool _state);
     void signalConnectServerOK();
+    void signalOffLEDAll();
 private slots:
     void slotStartToCheckAPIBuff(void);
     void slotCheckAPIBuffToSend(void);
@@ -119,6 +121,8 @@ private slots:
     void slotClientPing(void);
     void slotSyncTime();
     void slotGetTimeFromServer();
+    void slotCloudBoxShutdown();
+    void slotCloudBoxReboot();
 };
 
 #endif // SM_CIRBOX_CLOUD_API_H

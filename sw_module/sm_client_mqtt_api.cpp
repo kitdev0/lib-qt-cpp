@@ -74,16 +74,18 @@ void SM_CLIENT_MQTT_API::slotMqttReceived(const QMQTT::Message & _message)
     QJsonDocument _json_doc = QJsonDocument::fromJson(_payload.toUtf8());
     QJsonObject _json_api = _json_doc.object().value("api").toObject();
 
-//    debug("topic >> " + _topic);
-//    debug("payload >> " + _payload);
-
     if(_topic.indexOf("report") != -1){
         String _id = _json_api.value("1").toString();
+//        debug("topic >> " + _topic);
+//        debug("payload >> " + _payload);
         returnMessage(_id,_MESSAGE_SUCCESS);
         emit signalCheckReportData(&_json_doc);
     }
     else if(_topic.indexOf("status") != -1){
         String _id = _json_doc.object().value("id").toString();
+//        debug("topic >> " + _topic);
+//        debug("payload >> " + _payload);
+//        debug("ID-"+_id + "=" +_json_doc.object().value("status").toString());
 //        returnMessage(_id,_MESSAGE_SUCCESS);
         emit signalCheckStatusData(&_json_doc);
     }
