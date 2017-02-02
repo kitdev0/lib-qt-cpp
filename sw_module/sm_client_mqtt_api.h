@@ -39,7 +39,7 @@
 #define _MQTT_NAME  "root"
 #define _MQTT_PASS  "cirbox2012"
 
-#define _CLIENT_TIMEOUT_TIME 15000
+#define _CLIENT_TIMEOUT_TIME 30000
 
 #ifndef _LED_ON
 #define _LED_ON     false
