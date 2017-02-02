@@ -7,8 +7,10 @@ SM_CIRBOX_CLOUD_API::SM_CIRBOX_CLOUD_API(SM_GSM_MODULE *my_ethernet, QObject *pa
     ethernet = my_ethernet;
     check_api_buff_to_send_timer = new QTimer;
     client_ping_pulling_timer = new QTimer;
+    systime_timer = new QTimer;
 
     json_api_data = new QJsonObject;
+
 
     connect(this, SIGNAL(signalConnectServerOK()),this,SLOT(slotStartToCheckAPIBuff()));
     connect(check_api_buff_to_send_timer, SIGNAL(timeout()),this,SLOT(slotCheckAPIBuffToSend()));
@@ -49,6 +51,13 @@ String SM_CIRBOX_CLOUD_API::responseMessage(QJsonDocument *_json_response)
     String _message = _json_response->object().value(String("message")).toString();
 //    debug("response message >> " + _message);
     return _message;
+}
+
+uint8_t SM_CIRBOX_CLOUD_API::responseCmd(QJsonDocument *_json_response)
+{
+    uint8_t _cmd = _json_response->object().value(String("cmd")).toInt();
+    debug("response cmd >> " + String::number(_cmd,10));
+    return _cmd;
 }
 
 bool SM_CIRBOX_CLOUD_API::reportData(QJsonDocument *_json_report)
@@ -102,6 +111,28 @@ String SM_CIRBOX_CLOUD_API::getMachineTime(void)
     String _time = logDebug->currentDay() + " " + logDebug->currentTime();
     return _time;
 }
+
+void SM_CIRBOX_CLOUD_API::checkToExecuteCmd(uint8_t _cmd)
+{
+    String command = "";
+    switch (_cmd)
+    {
+    case 1://shutdown
+        debug("Shutdown");
+        command = "sudo shutdown -r";
+        system(command.toStdString().c_str());
+        break;
+    case 2://reboot
+        debug("Reboot");
+        command = "sudo reboot";
+        system(command.toStdString().c_str());
+        break;
+    default:
+        debug("CMD Not found");
+        break;
+    }
+}
+
 //private
 
 //private slot
@@ -200,6 +231,9 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPIClientPing()
             debug(_json_response.toJson(QJsonDocument::Compact));
             debug("Client Ping - Json Response error");
         }
+        else{
+            checkToExecuteCmd(responseCmd(&_json_response));
+        }
         emit signalSetLEDServer(_LED_ON);
     }
     else{
@@ -255,7 +289,7 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
 
         if(responseStatus(&_json_response) != _HTTP_STATUS_OK || responseMessage(&_json_response) != _MESSAGE_SUCCESS){
             debug(_json_response.toJson(QJsonDocument::Compact));
-            debug("Sysc Time - Json Response error");
+            debug("Sync Time - Json Response error");
             return 0;
         }
         else{
@@ -276,14 +310,15 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
             String _time = _hour + ":" + _minute + ":" + _second;
             logDebug->setDateTime(_date, _time);
             debug("getTimeZone >> Success");
-            debug("Sysc Time >> " + _date + " " + _time);
+            debug("Sync Time >> " + _date + " " + _time);
+            last_time_syntime = QDateTime::currentDateTime().toString("dd");
             cloud_box_ready = true;
             emit signalConnectServerOK();//Start to check api buffer
             emit signalSetLEDServer(_LED_ON);
             return 1;
         }
     }
-    debug("getTimeZone >> Sysc Time - API Response error");
+    debug("getTimeZone >> Sync Time - API Response error");
     debug("getTimeZone >> Unsuccess !!");
     cloud_box_ready = false;
     return 0;
@@ -427,12 +462,19 @@ void SM_CIRBOX_CLOUD_API::slotClientPing(void)
     flag_wait_to_read_response = true;
     QTimer::singleShot(_READ_METHOD_DELAY_TIME,this,SLOT(slotReadResponseAPIClientPing()));
 
+    if(QDateTime::currentDateTime().toString("dd") != last_time_syntime){
+        QTimer::singleShot(5000,this,SLOT(slotGetTimeFromServer()));
+    }
+//    else{
+//        debug("#AB");
+//    }
+
     clientPingResetTimer();
 }
 
 void SM_CIRBOX_CLOUD_API::slotSyncTime(void)
 {
-    if(cloud_box_ready == false)
+    if(!cloud_box_ready)
     {
         if(!ethernet->internet->isConnect())
             ethernet->internet->connect();
@@ -444,4 +486,16 @@ void SM_CIRBOX_CLOUD_API::slotSyncTime(void)
             ethernet->internet->disConnect();
         }
     }
+}
+
+void SM_CIRBOX_CLOUD_API::slotGetTimeFromServer(void)
+{
+    if(flag_wait_to_read_response){
+        return;
+    }
+
+    if(!ethernet->internet->isConnect())
+        ethernet->internet->connect();
+
+    syncTime("+7");
 }

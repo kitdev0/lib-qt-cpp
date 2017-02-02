@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QDateTime>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -53,7 +54,7 @@
 
 #define _MIN_TO_MSEC(min) min*60*1000
 
-#define _CLIENT_PING_PULLING_TIME _MIN_TO_MSEC(1) //(Min.)
+#define _CLIENT_PING_PULLING_TIME _MIN_TO_MSEC(2) //(Min.)
 
 class SM_CIRBOX_CLOUD_API : public QObject
 {
@@ -81,6 +82,7 @@ private:
     SM_DEBUGCLASS *logDebug;
 
     String serialno = _SERIAL_NUMBER_DEFAULT_VALUE;
+    String last_time_syntime = "";
 
     bool flag_wait_to_read_response = false;
     bool flag_send_api_data = true;
@@ -92,6 +94,7 @@ private:
 
     QTimer *check_api_buff_to_send_timer;
     QTimer *client_ping_pulling_timer;
+    QTimer *systime_timer;
 
     QJsonObject json_api_buff[_API_BUFFER_SIZE];
     QJsonObject *json_api_data;
@@ -100,7 +103,9 @@ private:
     bool reportData(QJsonDocument *_json_report);
     uint16_t responseStatus(QJsonDocument *_json_response);
     String responseMessage(QJsonDocument *_json_response);
+    uint8_t responseCmd(QJsonDocument *_json_response);
     String getMachineTime(void);
+    void checkToExecuteCmd(uint8_t _cmd);
 signals:
     void signalResponseAPISuccess();
     void signalResponseAPIUnsuccess();
@@ -113,6 +118,7 @@ private slots:
     void slotReadResponseAPIClientPing(void);
     void slotClientPing(void);
     void slotSyncTime();
+    void slotGetTimeFromServer();
 };
 
 #endif // SM_CIRBOX_CLOUD_API_H
