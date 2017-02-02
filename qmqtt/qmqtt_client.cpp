@@ -256,7 +256,7 @@ void Client::onReceived(Frame &frame)
     quint8 header = frame.header();
     quint8 type = GETTYPE(header);
     Message message;
-    qCDebug(client) << "handleFrame: type=" << type;
+    //qCDebug(client) << "handleFrame: type=" << type;
 
     switch(type) {
     case CONNACK:
