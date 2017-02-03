@@ -203,7 +203,6 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPI(void)
     if(_api.size() > 0)
     {
 //        debug("Response API : " + _api);
-
         QJsonDocument _json_response = QJsonDocument::fromJson(_api.toUtf8());
         uint16_t _response_status = responseStatus(&_json_response);
         String _response_message = responseMessage(&_json_response);
@@ -237,7 +236,6 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPIClientPing()
     if(_api.size() > 0)
     {
 //        debug("response api >> " + _api);
-
         QJsonDocument _json_response = QJsonDocument::fromJson(_api.toUtf8());
 
         if(responseStatus(&_json_response) != _HTTP_STATUS_OK || responseMessage(&_json_response) != _MESSAGE_SUCCESS){

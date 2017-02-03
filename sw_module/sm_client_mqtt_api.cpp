@@ -169,11 +169,12 @@ void SM_CLIENT_MQTT_API::slotCheckStatusData(QJsonDocument *_json_doc)
         if(_error_code.size() > 0){
             if(_error_code != machine_status[_array].e_code){
                 machine_status[_array].e_code = _error_code;
+                _str = "Update status >> ";
+                _str += "ID:" + _id;
+                _str += "-Error:" + _error_code;
+                debug(_str);
                 _flag_update = true;
             }
-            _str = "update status >> ";
-            _str += "Error : " + _id;
-            debug(_str);
         }
         else{
             if(machine_status[_array].e_code != "-"){
