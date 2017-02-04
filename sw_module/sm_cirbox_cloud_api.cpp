@@ -206,6 +206,7 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPI(void)
         QJsonDocument _json_response = QJsonDocument::fromJson(_api.toUtf8());
         uint16_t _response_status = responseStatus(&_json_response);
         String _response_message = responseMessage(&_json_response);
+        uint8_t _response_cmd = responseCmd(&_json_response);
 
         if(_response_status < _HTTP_STATUS_INTERNAL_SERVER_ERROR)
         {
@@ -220,6 +221,12 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPI(void)
             debug("Response API : Unsuccess >> " + _api);
             emit signalResponseAPIUnsuccess();
         }
+
+        if(_response_cmd > 0){
+            debug("Response CMD >> " + String::number(_response_cmd,10));
+            checkToExecuteCmd(_response_cmd);
+        }
+
         emit signalSetLEDServer(_LED_ON);
     }
     else{
@@ -237,17 +244,17 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPIClientPing()
     {
 //        debug("response api >> " + _api);
         QJsonDocument _json_response = QJsonDocument::fromJson(_api.toUtf8());
+        uint16_t _response_status = responseStatus(&_json_response);
+        String _response_message = responseMessage(&_json_response);
+        uint8_t _response_cmd = responseCmd(&_json_response);
 
-        if(responseStatus(&_json_response) != _HTTP_STATUS_OK || responseMessage(&_json_response) != _MESSAGE_SUCCESS){
-            debug(_json_response.toJson(QJsonDocument::Compact));
-            debug("Client Ping - Json Response error");
+        if(_response_status != _HTTP_STATUS_OK || _response_message != _MESSAGE_SUCCESS){
+            debug("Client Ping - Json Response error >> " + _api);
         }
-        else{
-            uint8_t _cmd = responseCmd(&_json_response);
-            if(_cmd > 0){
-                debug("response cmd >> " + String::number(_cmd,10));
-                checkToExecuteCmd(_cmd);
-            }
+
+        if(_response_cmd > 0){
+            debug("Response Cmd >> " + String::number(_response_cmd,10));
+            checkToExecuteCmd(_response_cmd);
         }
 
         if(!flag_set_led_off_all)
