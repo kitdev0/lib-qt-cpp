@@ -24,8 +24,8 @@
 #ifdef Q_OS_OSX
 #define _CLOUD_API_DEBUG _DEBUG_SAY_ONLY
 #else
-//#define _CLOUD_API_DEBUG _DEBUG_SAY_ONLY
-#define _CLOUD_API_DEBUG _DEBUG_WRITE_ONLY
+#define _CLOUD_API_DEBUG _DEBUG_SAY_ONLY
+//#define _CLOUD_API_DEBUG _DEBUG_WRITE_ONLY
 //#define _CLOUD_API_DEBUG _DEBUG_SAY_AND_WRITE
 #endif
 
@@ -55,6 +55,8 @@
 #define _MIN_TO_MSEC(min) min*60*1000
 
 #define _CLIENT_PING_PULLING_TIME _MIN_TO_MSEC(2) //(Min.)
+
+#define _CCID_LEN_MAX   32
 
 class SM_CIRBOX_CLOUD_API : public QObject
 {
@@ -123,6 +125,7 @@ private slots:
     void slotGetTimeFromServer();
     void slotCloudBoxShutdown();
     void slotCloudBoxReboot();
+    void slotUnmountSDCard();
 };
 
 #endif // SM_CIRBOX_CLOUD_API_H
