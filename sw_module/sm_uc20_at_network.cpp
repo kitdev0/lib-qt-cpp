@@ -88,7 +88,7 @@ uint8_t SM_UC20_AT_NETWORK_CLASS::getSignalQuality(void)
                 int _index1 = _str.indexOf(" ");
                 int _index2 = _str.indexOf(",");
                 _signal = _str.mid(_index1 + 1, _index2 - _index1 - 1).toInt();
-                debug("<< " + String::number(_signal,10));
+                debug(" << " + String::number(_signal,10));
                 gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT);
                 return(_signal);
             }
