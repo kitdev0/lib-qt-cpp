@@ -131,6 +131,10 @@ bool SM_GSM_MODULE::slotInit(void)
         return 0;
     }
 
+    if (sim->getCCID().size() == 0){
+        return 0;
+    }
+
     if (!network->setOperator()){
         //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;
@@ -146,7 +150,7 @@ bool SM_GSM_MODULE::slotInit(void)
         return 0;
     }
 
-    if (!network->getSignalQuality()){
+    if (network->getSignalQuality() == 101){
         //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;
     }
@@ -181,7 +185,7 @@ void SM_GSM_MODULE::slotSetPacketNetworkRegis()
 {
     if(!flag_packet_network_is_regis)
     {
-        if(!packet->getNetworkRegis()){
+        if(!packet->getPacketNetworkRegis()){
             if(packet_network_regis_try_cnt < 20){
                 QTimer::singleShot(2000,this,SLOT(slotSetPacketNetworkRegis())); //try again
                 packet_network_regis_try_cnt++;

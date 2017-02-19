@@ -29,7 +29,7 @@ void SM_UC20_AT_PACKET_CLASS::debug(String data)
 #endif
 }
 
-bool SM_UC20_AT_PACKET_CLASS::getNetworkRegis(void)	//CGREG?
+bool SM_UC20_AT_PACKET_CLASS::getPacketNetworkRegis(void)	//CGREG?
 {
 	uint8_t _state = 0;
 
