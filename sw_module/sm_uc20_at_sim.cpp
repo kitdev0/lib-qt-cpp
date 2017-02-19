@@ -79,10 +79,13 @@ String SM_UC20_AT_SIM_CLASS::getCCID(void)				//QCCID
         if(gsmModule->serial_port->canReadLine())
         {
             String _str = gsmModule->serial_port->readLine();
-            //debug("read data >> " + _str);
+//            debug("read data >> " + _str);
             if (_str.indexOf("+QCCID:") != -1)
             {
-                String _res = _str.mid(_str.indexOf(" ") + 1);
+                int _index1 = _str.indexOf(" ") + 1;
+                int _index2 = _str.length() - _index1 - 2;
+//                debug("#A = " + String::number(_index2));
+                String _res = _str.mid(_index1,_index2);
                 debug("<< " + _res);
                 gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT);
                 return (_res);
