@@ -68,16 +68,23 @@ void SM_CLIENT_MQTT_API::slotMqttReceived(const QMQTT::Message & _message)
     String _topic = _message.topic();
     String _payload = String(_message.payload());
 
-    if(!_payload.length())
+    if(!_payload.length()){
+        debug("!! MqttReceive >> Empty Payload !!");
         return;
+    }
 
     QJsonDocument _json_doc = QJsonDocument::fromJson(_payload.toUtf8());
     QJsonObject _json_api = _json_doc.object().value("api").toObject();
 
     if(_topic.indexOf("report") != -1){
         String _id = _json_api.value("1").toString();
-//        debug("topic >> " + _topic);
         debug("# Get Report-Topic : Payload = " + _payload);
+
+        if(!_id.length()){
+            debug("!! MqttReceive >> ID Not found !!");
+            return;
+        }
+//        debug("topic >> " + _topic);
         returnMessage(_id,_MESSAGE_SUCCESS);
         emit signalCheckReportData(&_json_doc);
     }
@@ -103,8 +110,10 @@ void SM_CLIENT_MQTT_API::slotCheckReportData(QJsonDocument *_json_doc)
 
     _json_object.insert("table_no",_table);
 
-    if(!_table.length())
+    if(!_table.length()){
+        debug("!! MqttReceive >> Table Not found !!");
         return;
+    }
 
     debug("table = " + _table);
 
