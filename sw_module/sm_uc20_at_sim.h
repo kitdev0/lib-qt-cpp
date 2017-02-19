@@ -3,7 +3,7 @@
 #ifndef SM_UC20_AT_SIM_H
 #define SM_UC20_AT_SIM_H
 
-#include "../../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+#include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0
@@ -20,8 +20,8 @@
 #ifdef Q_OS_OSX
 #define _UC20_SIM_DEBUG _DEBUG_SAY_ONLY
 #else
-//#define _UC20_SIM_DEBUG _DEBUG_SAY_ONLY
-#define _UC20_SIM_DEBUG _DEBUG_WRITE_ONLY
+#define _UC20_SIM_DEBUG _DEBUG_SAY_ONLY
+//#define _UC20_SIM_DEBUG _DEBUG_WRITE_ONLY
 //#define _UC20_SIM_DEBUG _DEBUG_SAY_AND_WRITE
 #endif
 

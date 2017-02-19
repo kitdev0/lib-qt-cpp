@@ -1,5 +1,5 @@
 #include "hm_uc20.h"
-#include "../../../../../lib-qt-cpp/sw_module/sm_delay.h"
+#include "../../../../lib-qt-cpp/sw_module/sm_delay.h"
 
 QElapsedTimer timer0;
 

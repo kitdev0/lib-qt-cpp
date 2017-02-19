@@ -3,7 +3,7 @@
 #ifndef SM_UC20_AT_PACKET_H
 #define SM_UC20_AT_PACKET_H
 
-#include "../../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+#include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0
@@ -20,8 +20,8 @@
 #ifdef Q_OS_OSX
 #define _UC20_PACKET_DEBUG _DEBUG_SAY_ONLY
 #else
-//#define _UC20_PACKET_DEBUG _DEBUG_SAY_ONLY
-#define _UC20_PACKET_DEBUG _DEBUG_WRITE_ONLY
+#define _UC20_PACKET_DEBUG _DEBUG_SAY_ONLY
+//#define _UC20_PACKET_DEBUG _DEBUG_WRITE_ONLY
 //#define _UC20_PACKET_DEBUG _DEBUG_SAY_AND_WRITE
 #endif
 
@@ -31,8 +31,7 @@ public:
     SM_UC20_AT_PACKET_CLASS(HM_UC20CLASS* _module);
 	~SM_UC20_AT_PACKET_CLASS();
 
-	bool getNetworkRegis(void);		//CGREG?
-
+    bool getPacketNetworkRegis(void);   //CGREG?
 private:
 #ifdef _UC20_PACKET_DEBUG
     SM_DEBUGCLASS *logDebug;

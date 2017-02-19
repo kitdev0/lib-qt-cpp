@@ -6,7 +6,7 @@
 #include <QJsonObject>
 #include <QTimer>
 
-#include "../../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+#include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
 #include "sm_uc20_at_sim.h"
 #include "sm_uc20_at_network.h"
 #include "sm_uc20_at_packet.h"
@@ -78,6 +78,7 @@ private:
     bool module_is_ready = false;
     bool flag_packet_network_is_regis = false;
     uint8_t packet_network_regis_try_cnt = 0;
+    uint8_t signal_quality = 0;
     void debug(String data);
 
 signals:
