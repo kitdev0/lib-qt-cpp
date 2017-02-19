@@ -86,6 +86,17 @@ bool SM_CIRBOX_CLOUD_API::reportData(QJsonDocument *_json_report)
     _json_object.remove("table_no");
     _json_object.insert("serialno",serialno);
 
+    String _ccid = ethernet->sim->getCCID();
+    if(_ccid.length() == 0 || _ccid.length() > _CCID_LEN_MAX)
+        _ccid = "-";
+
+    String _sq = String::number(ethernet->network->getSignalQuality(),10);
+    if(_sq.length() == 0 || _sq.length() > 5)
+        _sq = "-";
+
+    _json_object.insert("ccid",_ccid);
+    _json_object.insert("sq",_sq);
+
     _api = QJsonDocument(_json_object).toJson(QJsonDocument::Compact);
     debug("Report data >> " + _api);
 
@@ -120,12 +131,14 @@ void SM_CIRBOX_CLOUD_API::checkToExecuteCmd(uint8_t _cmd)
         debug("!! Shutdown !!");
         emit signalOffLEDAll();
         flag_set_led_off_all = true;
+        QTimer::singleShot(500,this,SLOT(slotUnmountSDCard()));
         QTimer::singleShot(5000,this,SLOT(slotCloudBoxShutdown()));
         break;
     case 2://reboot
         debug("!! Reboot !!");
         emit signalOffLEDAll();
         flag_set_led_off_all = true;
+        QTimer::singleShot(500,this,SLOT(slotUnmountSDCard()));
         QTimer::singleShot(5000,this,SLOT(slotCloudBoxReboot()));
         break;
     default:
@@ -146,6 +159,18 @@ void SM_CIRBOX_CLOUD_API::slotCloudBoxShutdown(void)
 void SM_CIRBOX_CLOUD_API::slotCloudBoxReboot(void)
 {
     String command = "sudo reboot";
+    system(command.toStdString().c_str());
+}
+
+void SM_CIRBOX_CLOUD_API::slotUnmountSDCard(void)
+{
+    String command = "sudo umount /dev/mmcblk0p1";
+    system(command.toStdString().c_str());
+
+    SM_DELAY::delay_ms(500);
+    system(command.toStdString().c_str());
+
+    SM_DELAY::delay_ms(500);
     system(command.toStdString().c_str());
 }
 
@@ -286,8 +311,24 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
 
     debug("## getTimeZone ##");
 
-    String _url = "http://cirbox.cloud/api/v1/synctime?serialno=" + serialno + "&gmt=" + _gmt;
+    String _url = "";
     String _api = "";
+
+    String _ccid = ethernet->sim->getCCID();
+    if(_ccid.length() == 0 || _ccid.length() > _CCID_LEN_MAX)
+        _ccid = "-";
+
+    String _sq = String::number(ethernet->network->getSignalQuality(),10);
+    if(_sq.length() == 0 || _sq.length() > 5)
+        _sq = "-";
+
+    _url = "http://cirbox.cloud/api/v1/synctime?";
+    _url += "serialno=" + serialno;
+    _url += "&gmt=" + _gmt;
+    _url += "&ccid=" + _ccid;
+    _url += "&sq=" + _sq;
+
+    debug("#URL = " + _url);
 
     if(!ethernet->http->setURL(_url)){
         debug("getTimeZone >> Unsuccess !!");
@@ -468,8 +509,21 @@ void SM_CIRBOX_CLOUD_API::slotClientPing(void)
         }
     }
 
-    String _url = "http://cirbox.cloud/api/v1/ping?serialno=" + serialno;
-    String _api = "";
+    String _url = "http://cirbox.cloud/api/v1/ping?";
+
+    String _ccid = ethernet->sim->getCCID();
+    if(_ccid.length() == 0 || _ccid.length() > _CCID_LEN_MAX)
+        _ccid = "-";
+
+    String _sq = String::number(ethernet->network->getSignalQuality(),10);
+    if(_sq.length() == 0 || _sq.length() > 5)
+        _sq = "-";
+
+    _url += "serialno=" + serialno;
+    _url += "&ccid=" + _ccid;
+    _url += "&sq=" + _sq;
+
+//    debug("#URL = " + _url);
 
     if(!ethernet->http->setURL(_url)){
         ethernet->internet->resetConnecting();
