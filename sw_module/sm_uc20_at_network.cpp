@@ -3,7 +3,7 @@
 SM_UC20_AT_NETWORK_CLASS::SM_UC20_AT_NETWORK_CLASS(HM_UC20CLASS* _module)
 {
 #ifdef _UC20_NETWORK_DEBUG
-	logDebug = new SM_DEBUGCLASS("UC20_NETWORK");
+    logDebug = new SM_DEBUGCLASS("UC15_NETWORK");
 #endif
     gsmModule = _module;
 }

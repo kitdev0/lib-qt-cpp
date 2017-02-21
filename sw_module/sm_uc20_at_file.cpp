@@ -7,7 +7,7 @@ bool available_ = true;
 SM_UC20_AT_FILE_CLASS::SM_UC20_AT_FILE_CLASS(HM_UC20CLASS* _module)
 {
 #ifdef _UC20_FILE_DEBUG
-	logDebug = new SM_DEBUGCLASS("UC20_FILE");
+    logDebug = new SM_DEBUGCLASS("UC15_FILE");
 #endif
     gsmModule = _module;
 }

@@ -4,7 +4,7 @@ SM_UC20_AT_INTERNET_CLASS::SM_UC20_AT_INTERNET_CLASS(HM_UC20CLASS* _module, QObj
     QObject(parent)
 {
 #ifdef _UC20_INTERNET_DEBUG
-	logDebug = new SM_DEBUGCLASS("UC20_INTERNET");
+    logDebug = new SM_DEBUGCLASS("UC15_INTERNET");
 #endif
     gsmModule = _module;
 }

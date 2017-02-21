@@ -3,7 +3,7 @@
 SM_UC20_AT_SIM_CLASS::SM_UC20_AT_SIM_CLASS(HM_UC20CLASS* _module)
 {
 #ifdef _UC20_SIM_DEBUG
-	logDebug = new SM_DEBUGCLASS("UC20_SIM");
+    logDebug = new SM_DEBUGCLASS("UC15_SIM");
 #endif
     gsmModule = _module;
 }

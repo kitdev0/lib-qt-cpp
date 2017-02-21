@@ -3,7 +3,7 @@
 SM_UC20_AT_PACKET_CLASS::SM_UC20_AT_PACKET_CLASS(HM_UC20CLASS* _module)
 {
 #ifdef _UC20_PACKET_DEBUG
-	logDebug = new SM_DEBUGCLASS("UC20_PACKET");
+    logDebug = new SM_DEBUGCLASS("UC15_PACKET");
 #endif
     gsmModule = _module;
 }

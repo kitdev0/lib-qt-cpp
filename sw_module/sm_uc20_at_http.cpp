@@ -5,7 +5,7 @@ bool flag_connect = false;
 SM_UC20_AT_HTTP_CLASS::SM_UC20_AT_HTTP_CLASS(HM_UC20CLASS* _module)
 {
 #ifdef _UC20_HTTP_DEBUG
-	logDebug = new SM_DEBUGCLASS("UC20_HTTP");
+    logDebug = new SM_DEBUGCLASS("UC15_HTTP");
 #endif
     gsmModule = _module;
 }
