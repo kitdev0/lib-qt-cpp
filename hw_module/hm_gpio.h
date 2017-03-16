@@ -4,7 +4,8 @@
 #include <QObject>
 #include <QIODevice>
 
-#include "../../../../lib-qt-cpp/sw_module/sm_debug.h"
+//#include "../../../../../lib-qt-cpp/sw_module/sm_debug.h"
+#include "/Users/kitdev/Google Drive/CirboxDesign/lib-qt-cpp/sw_module/sm_debug.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0
@@ -18,9 +19,11 @@
 #define _DEBUG_SAY_AND_WRITE 2
 #endif //_DEBUG_PRINT_AND_WRITE
 
+#ifndef _HM_GPIO_DEBUG
 //#define _HM_GPIO_DEBUG _DEBUG_SAY_ONLY
 #define _HM_GPIO_DEBUG _DEBUG_WRITE_ONLY
 //#define _HM_GPIO_DEBUG _DEBUG_SAY_AND_WRITE
+#endif
 
 #ifndef _OUTPUT
 #define _OUTPUT true

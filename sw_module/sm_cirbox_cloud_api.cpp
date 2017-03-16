@@ -1,6 +1,6 @@
 #include "sm_cirbox_cloud_api.h"
 
-SM_CIRBOX_CLOUD_API::SM_CIRBOX_CLOUD_API(SM_GSM_MODULE *my_ethernet, QObject *parent) :
+SM_CIRBOX_CLOUD_API::SM_CIRBOX_CLOUD_API(SM_GSM_MODULE *my_ethernet,QObject *parent) :
     QObject(parent)
 {
     logDebug = new SM_DEBUGCLASS("Cloud-API");
@@ -60,8 +60,19 @@ uint8_t SM_CIRBOX_CLOUD_API::responseCmd(QJsonDocument *_json_response)
     return _cmd;
 }
 
+QString SM_CIRBOX_CLOUD_API::responseDeviceID(QJsonDocument *_json_response)
+{
+    QString _id = _json_response->object().value(String("deviceid")).toString();
+//    debug("response id >> " + _id);
+    return _id;
+}
+
 bool SM_CIRBOX_CLOUD_API::reportData(QJsonDocument *_json_report)
 {
+    if(STATIC_BOOL_WAIT_TO_REBOOT){
+        return false;
+    }
+
     clientPingResetTimer();
 
 //    debug("## Report transaction ##");
@@ -131,19 +142,111 @@ void SM_CIRBOX_CLOUD_API::checkToExecuteCmd(uint8_t _cmd)
         debug("!! Shutdown !!");
         emit signalOffLEDAll();
         flag_set_led_off_all = true;
-        QTimer::singleShot(500,this,SLOT(slotUnmountSDCard()));
+        QTimer::singleShot(4000,this,SLOT(slotUnmountSDCard()));
         QTimer::singleShot(5000,this,SLOT(slotCloudBoxShutdown()));
+        STATIC_BOOL_WAIT_TO_REBOOT = true;
         break;
     case 2://reboot
         debug("!! Reboot !!");
         emit signalOffLEDAll();
         flag_set_led_off_all = true;
-        QTimer::singleShot(500,this,SLOT(slotUnmountSDCard()));
+        QTimer::singleShot(4000,this,SLOT(slotUnmountSDCard()));
         QTimer::singleShot(5000,this,SLOT(slotCloudBoxReboot()));
+        STATIC_BOOL_WAIT_TO_REBOOT = true;
         break;
     default:
         debug("!! CMD Not found !!");
         break;
+    }
+}
+
+void SM_CIRBOX_CLOUD_API::configSystem(QString _service_id)
+{
+    if(_service_id == _SERVICE_SC || _service_id == _SERVICE_MC)
+    {
+        cmdRemove_interfaceFile();
+
+        if(_service_id == _SERVICE_SC){ //Single Client
+            debug("Set system to Single Client");
+
+            slotCreatRunAppScript(_SERVICE_SC);
+
+            String _command = "sudo update-rc.d mosquitto disable";
+            system(_command.toStdString().c_str());
+
+            _command = "sudo cp /Users/kitdev/CloudBoxApp/interfaces.sc /etc/network/interfaces";
+            system(_command.toStdString().c_str());
+        }
+
+        if(_service_id == _SERVICE_MC){ //Multi Client
+            debug("Set system to Multi Client");
+
+            slotCreatRunAppScript(_SERVICE_MC);
+
+            String _command = "sudo update-rc.d mosquitto enable";
+            system(_command.toStdString().c_str());
+
+            _command = "sudo cp /Users/kitdev/CloudBoxApp/interfaces.mc /etc/network/interfaces";
+            system(_command.toStdString().c_str());
+
+            _command = "service mosquitto start";
+            system(_command.toStdString().c_str());
+        }
+
+        setMachineType(_service_id);
+
+//        emit signalOffLEDAll();
+//        flag_set_led_off_all = true;
+//        QTimer::singleShot(500,this,SLOT(slotUnmountSDCard()));
+//        QTimer::singleShot(8000,this,SLOT(slotCloudBoxReboot()));
+//        flag_wait_to_reboot = true;
+    }
+}
+
+void SM_CIRBOX_CLOUD_API::cmdRemove_RunAppScript()
+{
+    String _command = "sudo rm /Users/kitdev/CloudBoxApp/runapp.sh";
+    system(_command.toStdString().c_str());
+}
+
+void SM_CIRBOX_CLOUD_API::cmdChmodX_RunAppScript()
+{
+    String _command = "sudo chmod +x /Users/kitdev/CloudBoxApp/runapp.sh";
+    system(_command.toStdString().c_str());
+}
+
+void SM_CIRBOX_CLOUD_API::cmdRemove_interfaceFile()
+{
+    String _command = "sudo rm /etc/network/interfaces";
+    system(_command.toStdString().c_str());
+}
+
+//QString _deviceid = _json_value.value("deviceid").toString();
+////            _deviceid = "04SC00001";
+//if(_deviceid.indexOf(machine_type) == -1){ //don't right
+//    debug("#A");
+//    configSystem(_deviceid);
+//    return false;
+//}
+
+void SM_CIRBOX_CLOUD_API::checkResponseIDToChangeService(QString _response_id)
+{
+    if(_response_id.size() > 0){
+        QString _service_id = _response_id.mid(2,2);
+//        debug("machine = " + machine_type);
+        if(_service_id != machine_type){
+            debug("Change service to " + _service_id);
+            configSystem(_service_id);
+
+            emit signalOffLEDAll();
+            flag_set_led_off_all = true;
+            QTimer::singleShot(8000,this,SLOT(slotUnmountSDCard()));
+            QTimer::singleShot(10000,this,SLOT(slotCloudBoxReboot()));
+            STATIC_BOOL_WAIT_TO_REBOOT = true;
+        }
+        else{
+            STATIC_BOOL_WAIT_TO_REBOOT = false;
+        }
     }
 }
 
@@ -179,6 +282,11 @@ void SM_CIRBOX_CLOUD_API::slotStartToCheckAPIBuff(void)
     check_api_buff_to_send_timer->start(_CHECK_API_BUFF_TO_SEND_TIMER);
 }
 
+void SM_CIRBOX_CLOUD_API::slotStopToCheckAPIBuff(void)
+{
+    check_api_buff_to_send_timer->stop();
+}
+
 void SM_CIRBOX_CLOUD_API::slotCheckAPIBuffToSend(void)
 {
     if(!cloud_box_ready){
@@ -204,7 +312,11 @@ void SM_CIRBOX_CLOUD_API::slotCheckAPIBuffToSend(void)
     {
         if(!ethernet->internet->isConnect()){
             if(!ethernet->internet->connect()){
-                //debug("Can't connect internet!!");
+//                debug("# Can't connect internet!!");
+                slotStopToCheckAPIBuff();
+                cloud_box_ready = false;
+                emit signalSetLEDServer(_LED_OFF);
+                QTimer::singleShot(5000,ethernet,SLOT(slotResetGsmModule()));
             }
             return;
         }
@@ -232,6 +344,8 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPI(void)
         uint16_t _response_status = responseStatus(&_json_response);
         String _response_message = responseMessage(&_json_response);
         uint8_t _response_cmd = responseCmd(&_json_response);
+        QString _response_id = responseDeviceID(&_json_response);
+
 
         if(_response_status < _HTTP_STATUS_INTERNAL_SERVER_ERROR)
         {
@@ -247,12 +361,15 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPI(void)
             emit signalResponseAPIUnsuccess();
         }
 
+        checkResponseIDToChangeService(_response_id);
+
         if(_response_cmd > 0){
             debug("Response CMD >> " + String::number(_response_cmd,10));
             checkToExecuteCmd(_response_cmd);
         }
 
-        emit signalSetLEDServer(_LED_ON);
+        if(!STATIC_BOOL_WAIT_TO_REBOOT)
+            emit signalSetLEDServer(_LED_ON);
     }
     else{
         debug("response data is empty!!");
@@ -272,10 +389,13 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPIClientPing()
         uint16_t _response_status = responseStatus(&_json_response);
         String _response_message = responseMessage(&_json_response);
         uint8_t _response_cmd = responseCmd(&_json_response);
+        QString _response_id = responseDeviceID(&_json_response);
 
         if(_response_status != _HTTP_STATUS_OK || _response_message != _MESSAGE_SUCCESS){
             debug("Client Ping - Json Response error >> " + _api);
         }
+
+        checkResponseIDToChangeService(_response_id);
 
         if(_response_cmd > 0){
             debug("Response Cmd >> " + String::number(_response_cmd,10));
@@ -322,7 +442,8 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
     if(_sq.length() == 0 || _sq.length() > 5)
         _sq = "-";
 
-    _url = "http://cirbox.cloud/api/v1/synctime?";
+    _url = String(_CIRBOX_CLOUD_URL);
+    _url += "/api/v1/synctime?";
     _url += "serialno=" + serialno;
     _url += "&gmt=" + _gmt;
     _url += "&ccid=" + _ccid;
@@ -351,6 +472,15 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
 //        debug("response api >> " + _api);
 
         QJsonDocument _json_response = QJsonDocument::fromJson(_api.toUtf8());
+        uint8_t _response_cmd = responseCmd(&_json_response);
+        QString _response_id = responseDeviceID(&_json_response);
+
+        checkResponseIDToChangeService(_response_id);
+
+        if(_response_cmd > 0){
+            debug("Response Cmd >> " + String::number(_response_cmd,10));
+            checkToExecuteCmd(_response_cmd);
+        }
 
         if(responseStatus(&_json_response) != _HTTP_STATUS_OK || responseMessage(&_json_response) != _MESSAGE_SUCCESS){
             debug(_json_response.toJson(QJsonDocument::Compact));
@@ -359,12 +489,12 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
         }
         else{
             QJsonObject _json_value = _json_response.object().value("result").toObject();
-            String _day = _json_value.value("day").toString();
-            String _month = _json_value.value("mounth").toString();
-            String _year = _json_value.value("year").toString();
-            String _hour = _json_value.value("hour").toString();
-            String _minute = _json_value.value("minute").toString();
-            String _second = _json_value.value("second").toString();
+            QString _day = _json_value.value("day").toString();
+            QString _month = _json_value.value("mounth").toString();
+            QString _year = _json_value.value("year").toString();
+            QString _hour = _json_value.value("hour").toString();
+            QString _minute = _json_value.value("minute").toString();
+            QString _second = _json_value.value("second").toString();
 //            debug("day >> " + _day);
 //            debug("month >> " + _month);
 //            debug("year >> " + _year);
@@ -378,8 +508,11 @@ bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt)
             debug("Sync Time >> " + _date + " " + _time);
             last_time_syntime = QDateTime::currentDateTime().toString("dd");
             cloud_box_ready = true;
-            emit signalConnectServerOK();//Start to check api buffer
-            emit signalSetLEDServer(_LED_ON);
+            if(!STATIC_BOOL_WAIT_TO_REBOOT){
+                emit signalConnectServerOK();//Start to check api buffer
+                emit signalSetLEDServer(_LED_ON);
+                QTimer::singleShot(15000,this,SLOT(slotUploadLogFile()));//Test
+            }
             return 1;
         }
     }
@@ -470,6 +603,12 @@ void SM_CIRBOX_CLOUD_API::clientPingResetTimer()
     client_ping_pulling_timer->start(_CLIENT_PING_PULLING_TIME);
 }
 
+void SM_CIRBOX_CLOUD_API::setMachineType(QString _machine_type)
+{
+    debug("setMachineType >> "+ _machine_type);
+    machine_type = _machine_type;
+}
+
 void SM_CIRBOX_CLOUD_API::slotReqUpdateAPI(QJsonDocument *_json_report)
 {
     QJsonObject _json_object = _json_report->object();
@@ -486,13 +625,33 @@ void SM_CIRBOX_CLOUD_API::slotReqUpdateAPI(QJsonDocument *_json_report)
     }
 }
 
+void SM_CIRBOX_CLOUD_API::slotCreatRunAppScript(QString _service_id)
+{
+    cmdRemove_RunAppScript();
+
+    if(_service_id == _SERVICE_SC){
+        String _command = "sudo echo /Users/kitdev/CloudBoxApp/cloudBox.app > /Users/kitdev/CloudBoxApp/runapp.sh";
+        system(_command.toStdString().c_str());
+    }
+    else if(_service_id == _SERVICE_MC){
+        String _command = "sudo echo /Users/kitdev/CloudBoxApp/laundryBox.app > /Users/kitdev/CloudBoxApp/runapp.sh";
+        system(_command.toStdString().c_str());
+    }
+
+    cmdChmodX_RunAppScript();
+
+}
+
 void SM_CIRBOX_CLOUD_API::slotClientPing(void)
 {
+    if(STATIC_BOOL_WAIT_TO_REBOOT)
+        return;
+
     client_ping_pulling_timer->stop();
 
     if(ethernet->moduleCannotUse()){
-        ethernet->slotResetGsmModule();
-        clientPingResetTimer();
+        QTimer::singleShot(5000,ethernet,SLOT(slotResetGsmModule()));
+//        clientPingResetTimer();
         return;
     }
 
@@ -504,12 +663,15 @@ void SM_CIRBOX_CLOUD_API::slotClientPing(void)
     if(!ethernet->internet->isConnect()){
         if(!ethernet->internet->connect()){
             //debug("Can't connect internet!!");
-            clientPingResetTimer();
+            emit signalSetLEDServer(_LED_OFF);
+            QTimer::singleShot(5000,ethernet,SLOT(slotResetGsmModule()));
+//            clientPingResetTimer();
             return;
         }
     }
 
-    String _url = "http://cirbox.cloud/api/v1/ping?";
+    String _url = String(_CIRBOX_CLOUD_URL);
+    _url += "/api/v1/ping?";
 
     String _ccid = ethernet->sim->getCCID();
     if(_ccid.length() == 0 || _ccid.length() > _CCID_LEN_MAX)
@@ -576,4 +738,114 @@ void SM_CIRBOX_CLOUD_API::slotGetTimeFromServer(void)
         ethernet->internet->connect();
 
     syncTime("+7");
+}
+
+bool SM_CIRBOX_CLOUD_API::slotUploadLogFile(void)
+{
+    debug("slotUploadLogFile");
+
+    if(STATIC_BOOL_WAIT_TO_REBOOT){
+        return 0;
+    }
+
+    debug("#1");
+
+    clientPingResetTimer();
+
+    debug("#2");
+
+    if(ethernet->moduleCannotUse()){
+        QTimer::singleShot(5000,ethernet,SLOT(slotResetGsmModule()));
+//        clientPingResetTimer();
+        return 0;
+    }
+
+    debug("#3");
+
+    if(flag_wait_to_read_response){
+        return 0;
+    }
+
+    debug("#4");
+
+    if(!ethernet->internet->isConnect()){
+        if(!ethernet->internet->connect()){
+            //debug("Can't connect internet!!");
+            emit signalSetLEDServer(_LED_OFF);
+            QTimer::singleShot(5000,ethernet,SLOT(slotResetGsmModule()));
+//            clientPingResetTimer();
+            return 0;
+        }
+    }
+
+    debug("#5");
+
+    String _url = "ftp.cirbox.co.th";
+    uint16_t _port = 77;
+    String _user = "cirbox";
+    String _pass = "Cir1213!";
+
+//    String _url = String(_CIRBOX_CLOUD_URL);
+//    _url += "/api/v1/ping?";
+
+//    String _ccid = ethernet->sim->getCCID();
+//    if(_ccid.length() == 0 || _ccid.length() > _CCID_LEN_MAX)
+//        _ccid = "-";
+
+//    String _sq = String::number(ethernet->network->getSignalQuality(),10);
+//    if(_sq.length() == 0 || _sq.length() > 5)
+//        _sq = "-";
+
+//    _url += "serialno=" + serialno;
+//    _url += "&ccid=" + _ccid;
+//    _url += "&sq=" + _sq;
+
+//    debug("#URL = " + _url);
+    if(!ethernet->ftp->setContextid(1)){
+        debug("Set coontextid - Unsuccess!!");
+        return 0;
+    }
+
+    if(!ethernet->ftp->setAccount(_user,_pass)){
+        debug("Set User or Password - Unsuccess!!");
+        return 0;
+    }
+
+    if(!ethernet->ftp->setFiletype(0)){
+        debug("Set file type - Unsuccess!!");
+        return 0;
+    }
+
+    if(!ethernet->ftp->setTransmode(1)){
+        debug("Set transmode - Unsuccess!!");
+        return 0;
+    }
+
+    if(!ethernet->ftp->setTimeout(90)){
+        debug("Set timeout - Unsuccess!!");
+        return 0;
+    }
+
+    if(!ethernet->ftp->loginToServer(_url,_port,true)){
+        ethernet->internet->resetConnecting();
+//        debug("Login to FTP Server - Unsuccess!!");
+//        clientPingResetTimer();
+        return 0;
+    }
+
+    if(!ethernet->ftp->getStatusFTPService(true)){
+        if(!ethernet->ftp->logoutFromServer(true)){
+            ethernet->internet->resetConnecting();
+        }
+        return 0;
+    }
+
+    if(!ethernet->ftp->logoutFromServer(true)){
+        ethernet->internet->resetConnecting();
+//        debug("Logout from FTP Server - Unsuccess!!");
+//        clientPingResetTimer();
+        return 0;
+    }
+
+    clientPingResetTimer();
 }

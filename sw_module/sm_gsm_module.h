@@ -6,13 +6,15 @@
 #include <QJsonObject>
 #include <QTimer>
 
-#include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+#include "/Users/kitdev/Google Drive/CirboxDesign/lib-qt-cpp/hw_module/hm_uc20.h"
+//#include "../../../../../lib-qt-cpp/hw_module/hm_uc20.h"
 #include "sm_uc20_at_sim.h"
 #include "sm_uc20_at_network.h"
 #include "sm_uc20_at_packet.h"
 #include "sm_uc20_at_internet.h"
 #include "sm_uc20_at_http.h"
 #include "sm_uc20_at_file.h"
+#include "sm_uc20_at_ftp.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0
@@ -27,11 +29,15 @@
 #endif //_DEBUG_PRINT_AND_WRITE
 
 #ifdef Q_OS_OSX
+#ifndef _GSM_MODULE_DEBUG
 #define _GSM_MODULE_DEBUG _DEBUG_SAY_ONLY
+#endif
 #else
+#ifndef _GSM_MODULE_DEBUG
 //#define _GSM_MODULE_DEBUG _DEBUG_SAY_ONLY
 #define _GSM_MODULE_DEBUG _DEBUG_WRITE_ONLY
 //#define _GSM_MODULE_DEBUG _DEBUG_SAY_AND_WRITE
+#endif
 #endif
 
 #define _WAIT_MODULE_RAEDY_TIME 35000
@@ -59,6 +65,7 @@ public:
     SM_UC20_AT_INTERNET_CLASS *internet = new SM_UC20_AT_INTERNET_CLASS(&uc20_module);
     SM_UC20_AT_HTTP_CLASS *http = new SM_UC20_AT_HTTP_CLASS(&uc20_module);
     SM_UC20_AT_FILE_CLASS *file = new SM_UC20_AT_FILE_CLASS(&uc20_module);
+    SM_UC20_AT_FTP_CLASS *ftp = new SM_UC20_AT_FTP_CLASS(&uc20_module);
 
 //    bool init(void);
     inline bool moduleIsReady(void){return module_is_ready;}

@@ -3,7 +3,8 @@
 #ifndef SM_UC20_AT_SIM_H
 #define SM_UC20_AT_SIM_H
 
-#include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+//#include "../../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+#include "/Users/kitdev/Google Drive/CirboxDesign/lib-qt-cpp/hw_module/hm_uc20.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0
@@ -18,11 +19,15 @@
 #endif //_DEBUG_PRINT_AND_WRITE
 
 #ifdef Q_OS_OSX
+#ifndef _UC20_SIM_DEBUG
 #define _UC20_SIM_DEBUG _DEBUG_SAY_ONLY
+#endif
 #else
-#define _UC20_SIM_DEBUG _DEBUG_SAY_ONLY
-//#define _UC20_SIM_DEBUG _DEBUG_WRITE_ONLY
+#ifndef _UC20_SIM_DEBUG
+//#define _UC20_SIM_DEBUG _DEBUG_SAY_ONLY
+#define _UC20_SIM_DEBUG _DEBUG_WRITE_ONLY
 //#define _UC20_SIM_DEBUG _DEBUG_SAY_AND_WRITE
+#endif
 #endif
 
 class SM_UC20_AT_SIM_CLASS

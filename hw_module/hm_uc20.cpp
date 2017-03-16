@@ -1,5 +1,6 @@
 #include "hm_uc20.h"
-#include "../../../../lib-qt-cpp/sw_module/sm_delay.h"
+//#include "../../../../../lib-qt-cpp/sw_module/sm_delay.h"
+#include "/Users/kitdev/Google Drive/CirboxDesign/lib-qt-cpp/sw_module/sm_delay.h"
 
 QElapsedTimer timer0;
 
@@ -451,7 +452,13 @@ bool HM_UC20CLASS::waitOK(uint32_t _time, bool _ndb)
     }
 }
 
-
+bool HM_UC20CLASS::saveConfig()
+{
+    if(!sendData("AT&W",1))
+        return 0;
+    debug("saveConfig");
+    return waitOK_ndb(_WAIT_OK_TIMEOUT);
+}
 
 bool HM_UC20CLASS::setURCPort(URC_t _port)		//QURCCFG=_port
 {

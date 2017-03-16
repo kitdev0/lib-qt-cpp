@@ -5,6 +5,7 @@ SM_CLIENT_MQTT_API::SM_CLIENT_MQTT_API(QObject *parent) : QObject(parent)
     logDebug = new SM_DEBUGCLASS("MQTT-API");
     mqttClient = new QMQTT::Client();
     client_online_time = new QTimer;
+    try_to_connect_broker_timer = new QTimer;
 
     connect(client_online_time,SIGNAL(timeout()),this,SLOT(slotCheckClientTimeout()));
     connect(this,SIGNAL(signalCheckReportData(QJsonDocument*)),this,SLOT(slotCheckReportData(QJsonDocument*)));
@@ -12,6 +13,8 @@ SM_CLIENT_MQTT_API::SM_CLIENT_MQTT_API(QObject *parent) : QObject(parent)
     connect(mqttClient, SIGNAL(connected()), this, SLOT(slotMqttConnected()));
     connect(mqttClient, SIGNAL(disconnected()), this, SLOT(slotMqttDisconnected()));
     connect(mqttClient, SIGNAL(received(const QMQTT::Message &)), this, SLOT(slotMqttReceived(const QMQTT::Message &)));
+    connect(try_to_connect_broker_timer,SIGNAL(timeout()),this,SLOT(slotTryToConnectBroker()));
+
 }
 
 SM_CLIENT_MQTT_API::~SM_CLIENT_MQTT_API()
@@ -22,10 +25,7 @@ SM_CLIENT_MQTT_API::~SM_CLIENT_MQTT_API()
 
 void SM_CLIENT_MQTT_API::init()
 {
-    mqttClient->setClientId(_MQTT_ID);
-    mqttClient->setUsername(_MQTT_NAME);
-    mqttClient->setPassword(_MQTT_PASS);
-    mqttClient->connect();
+    slotInit();
 }
 
 void SM_CLIENT_MQTT_API::setClientIdList(QJsonDocument *_json_doc)
@@ -56,15 +56,21 @@ void SM_CLIENT_MQTT_API::slotMqttConnected(void)
     mqttClient->subscribe("report",0);
     mqttClient->subscribe("status",0);
     client_online_time->start(_CLIENT_TIMEOUT_TIME);
+//    if(try_to_connect_broker_timer->isActive())
+//        try_to_connect_broker_timer->stop();
 }
 
 void SM_CLIENT_MQTT_API::slotMqttDisconnected(void)
 {
     debug("Connect to Broker >> Fail");
+    slotTryToConnectBroker();
 }
 
 void SM_CLIENT_MQTT_API::slotMqttReceived(const QMQTT::Message & _message)
 {
+    if(SM_CIRBOX_CLOUD_API::STATIC_BOOL_WAIT_TO_REBOOT){
+        return;
+    }
     String _topic = _message.topic();
     String _payload = String(_message.payload());
 
@@ -78,20 +84,28 @@ void SM_CLIENT_MQTT_API::slotMqttReceived(const QMQTT::Message & _message)
 
     if(_topic.indexOf("report") != -1){
         String _id = _json_api.value("1").toString();
-        debug("# Get Report-Topic : Payload = " + _payload);
+        int16_t _mid = _json_doc.object().value("mid").toInt();
+
+//        debug("# Get Report-Topic : Payload = " + _payload);
+//        debug("# mid = " + String::number(_mid));
 
         if(!_id.length()){
             debug("!! MqttReceive >> ID Not found !!");
             return;
         }
 //        debug("topic >> " + _topic);
-        returnMessage(_id,_MESSAGE_SUCCESS);
-        emit signalCheckReportData(&_json_doc);
+        if(_mid != last_mid){
+            if(_mid != -1){
+                returnMessage(_id,_MESSAGE_SUCCESS);
+                emit signalCheckReportData(&_json_doc);
+            }
+            last_mid = _mid;
+        }
     }
     else if(_topic.indexOf("status") != -1){
-        String _id = _json_doc.object().value("id").toString();
+//        String _id = _json_doc.object().value("id").toString();
 //        debug("topic >> " + _topic);
-//        debug("payload >> " + _payload);
+///        debug("payload >> " + _payload);
 //        debug("ID-"+_id + "=" +_json_doc.object().value("status").toString());
 //        returnMessage(_id,_MESSAGE_SUCCESS);
         emit signalCheckStatusData(&_json_doc);
@@ -244,15 +258,56 @@ void SM_CLIENT_MQTT_API::slotCheckClientTimeout(void)
     }
 }
 
+void SM_CLIENT_MQTT_API::slotTryToConnectBroker()
+{
+    if(try_to_connect_broker_timer->isActive())
+        try_to_connect_broker_timer->stop();
+
+    if(!mqttClient->isConnected()){
+        debug("slotTryToConnectBroker");
+        slotStopBroker();
+
+        QTimer::singleShot(2500,this,SLOT(slotStartBroker()));
+        QTimer::singleShot(5000,this,SLOT(slotInit()));
+        QTimer::singleShot(8000,this,SLOT(slotStartTryToConnectBroker()));
+    }
+//    slotStartTryToConnectBroker();
+}
+
+void SM_CLIENT_MQTT_API::slotStopBroker()
+{
+    String _command = "service mosquitto stop";
+    system(_command.toStdString().c_str());
+}
+
+void SM_CLIENT_MQTT_API::slotStartBroker()
+{
+    String _command = "service mosquitto start";
+    system(_command.toStdString().c_str());
+}
+
+void SM_CLIENT_MQTT_API::slotInit()
+{
+    mqttClient->setClientId(_MQTT_ID);
+    mqttClient->setUsername(_MQTT_NAME);
+    mqttClient->setPassword(_MQTT_PASS);
+    mqttClient->connect();
+}
+
+void SM_CLIENT_MQTT_API::slotStartTryToConnectBroker()
+{
+    try_to_connect_broker_timer->start(_TRY_TO_CONNECT_BROKER);
+}
+
 //private
 void SM_CLIENT_MQTT_API::debug(String data)
 {
-#ifdef _SM_CLIENT_MQTT_API_DEBUG
-#if _SM_CLIENT_MQTT_API_DEBUG == _DEBUG_SAY_ONLY
+#ifdef _CLIENT_MQTT_API_DEBUG
+#if _CLIENT_MQTT_API_DEBUG == _DEBUG_SAY_ONLY
     logDebug->sayln(data);
-#elif _SM_CLIENT_MQTT_API_DEBUG == _DEBUG_WRITE_ONLY
+#elif _CLIENT_MQTT_API_DEBUG == _DEBUG_WRITE_ONLY
     logDebug->writeLog(data);
-#elif _SM_CLIENT_MQTT_API_DEBUG == _DEBUG_SAY_AND_WRITE
+#elif _CLIENT_MQTT_API_DEBUG == _DEBUG_SAY_AND_WRITE
     logDebug->sayAndWriteLog(data);
 #endif
 #endif

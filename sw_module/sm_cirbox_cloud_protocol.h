@@ -63,6 +63,8 @@ private:
 
     bool is_begin = false;
     bool flag_client_is_connected = false;
+    bool flag_first_scanning = true;
+    bool flag_first_serial_not_found = true;
     int8_t machine_client_connect_ok = -1;
 
     uint32_t cb_serial_baud;

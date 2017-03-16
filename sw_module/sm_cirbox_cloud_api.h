@@ -22,17 +22,24 @@
 #endif //_DEBUG_PRINT_AND_WRITE
 
 #ifdef Q_OS_OSX
+#ifndef _CLOUD_API_DEBUG
 #define _CLOUD_API_DEBUG _DEBUG_SAY_ONLY
+#endif
 #else
-#define _CLOUD_API_DEBUG _DEBUG_SAY_ONLY
+#ifndef _CLOUD_API_DEBUG
+//#define _CLOUD_API_DEBUG _DEBUG_SAY_ONLY
 //#define _CLOUD_API_DEBUG _DEBUG_WRITE_ONLY
-//#define _CLOUD_API_DEBUG _DEBUG_SAY_AND_WRITE
+#define _CLOUD_API_DEBUG _DEBUG_SAY_AND_WRITE
+#endif
 #endif
 
-#define _SERIAL_NUMBER_SIZE_DEF 9
-#define _MESSAGE_SUCCESS    "success"
+#define _SERIAL_NUMBER_SIZE_DEF 8
+#define _MESSAGE_SUCCESS        "success"
 
-#define _API_V1_URL     "http://cirbox.cloud/api/v1/vending/"
+#define _API_V1_URL         "http://cirbox.cloud/api/v1/vending/"
+#define _CIRBOX_CLOUD_URL   "http://cirbox.cloud"
+//#define _CIRBOX_CLOUD_URL   "http://cirbox-cloud-asia.appspot.com"
+//#define _API_V1_URL         "http://cirbox-cloud-asia.appspot.com/api/v1/vending/"
 
 #define _API_BUFFER_SIZE    256
 
@@ -58,12 +65,15 @@
 
 #define _CCID_LEN_MAX   32
 
+#define _SERVICE_SC "SC"
+#define _SERVICE_MC "MC"
+
 class SM_CIRBOX_CLOUD_API : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit SM_CIRBOX_CLOUD_API(SM_GSM_MODULE *my_ethernet = 0,QObject *parent = 0);
+    explicit SM_CIRBOX_CLOUD_API(SM_GSM_MODULE *my_ethernet = 0, QObject *parent = 0);
     ~SM_CIRBOX_CLOUD_API();
 
     SM_GSM_MODULE *ethernet;
@@ -74,12 +84,16 @@ public:
     bool reqUpdateAPIData(void);
     bool reqClrJsonAPIData(void);
     bool setAPIData(String _table_no, String _api_id, String _data);
+    static bool STATIC_BOOL_WAIT_TO_REBOOT;
     uint16_t apiDataToSendAvailable(void);
     void clientPingResetTimer(void);
     inline bool getCloudBoxReady(){return cloud_box_ready;}
+    void configSystem(QString _machine_type);
+    void setMachineType(QString _machine_type);
 public slots:
     void slotReqUpdateAPI(QJsonDocument *_json_report);
-
+    void slotCreatRunAppScript(QString _service_id);
+    bool slotUploadLogFile();
 private:
     SM_DEBUGCLASS *logDebug;
 
@@ -102,13 +116,20 @@ private:
     QJsonObject json_api_buff[_API_BUFFER_SIZE];
     QJsonObject *json_api_data;
 
+    QString machine_type = "";
+
     void debug(QString data);
     bool reportData(QJsonDocument *_json_report);
     uint16_t responseStatus(QJsonDocument *_json_response);
     String responseMessage(QJsonDocument *_json_response);
     uint8_t responseCmd(QJsonDocument *_json_response);
+    QString responseDeviceID(QJsonDocument *_json_response);
     String getMachineTime(void);
     void checkToExecuteCmd(uint8_t _cmd);
+    void cmdRemove_RunAppScript();
+    void cmdChmodX_RunAppScript();
+    void cmdRemove_interfaceFile();
+    void checkResponseIDToChangeService(QString _response_id);
 signals:
     void signalResponseAPISuccess();
     void signalResponseAPIUnsuccess();
@@ -117,6 +138,7 @@ signals:
     void signalOffLEDAll();
 private slots:
     void slotStartToCheckAPIBuff(void);
+    void slotStopToCheckAPIBuff();
     void slotCheckAPIBuffToSend(void);
     void slotReadResponseAPI(void);
     void slotReadResponseAPIClientPing(void);

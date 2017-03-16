@@ -4,7 +4,8 @@
 #define SM_UC20_AT_INTERNET_H
 
 #include <QObject>
-#include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+//#include "../../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+#include "/Users/kitdev/Google Drive/CirboxDesign/lib-qt-cpp/hw_module/hm_uc20.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0
@@ -20,11 +21,15 @@
 
 
 #ifdef Q_OS_OSX
+#ifndef _UC20_INTERNET_DEBUG
 #define _UC20_INTERNET_DEBUG _DEBUG_SAY_ONLY
+#endif
 #else
+#ifndef _UC20_INTERNET_DEBUG
 //#define _UC20_INTERNET_DEBUG _DEBUG_SAY_ONLY
 #define _UC20_INTERNET_DEBUG _DEBUG_WRITE_ONLY
 //#define _UC20_INTERNET_DEBUG _DEBUG_SAY_AND_WRITE
+#endif
 #endif
 
 class SM_UC20_AT_INTERNET_CLASS : public QObject
@@ -53,6 +58,7 @@ private:
 
 signals:
     void signalResetGsmModule();
+    void signalInitGsmModule();
 };
 
 

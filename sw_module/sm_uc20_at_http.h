@@ -3,7 +3,8 @@
 #ifndef SM_UC20_AT_HTTP_H
 #define SM_UC20_AT_HTTP_H
 
-#include "../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+//#include "../../../../../lib-qt-cpp/hw_module/hm_uc20.h"
+#include "/Users/kitdev/Google Drive/CirboxDesign/lib-qt-cpp/hw_module/hm_uc20.h"
 
 #ifndef _DEBUG_SAY_ONLY
 #define _DEBUG_SAY_ONLY 0
@@ -19,11 +20,15 @@
 
 
 #ifdef Q_OS_OSX
+#ifndef _UC20_HTTP_DEBUG
 #define _UC20_HTTP_DEBUG _DEBUG_SAY_ONLY
+#endif
 #else
+#ifndef _UC20_HTTP_DEBUG
 //#define _UC20_HTTP_DEBUG _DEBUG_SAY_ONLY
 #define _UC20_HTTP_DEBUG _DEBUG_WRITE_ONLY
 //#define _UC20_HTTP_DEBUG _DEBUG_SAY_AND_WRITE
+#endif
 #endif
 
 #define _HTTP_STATUS_CONTINUE           100

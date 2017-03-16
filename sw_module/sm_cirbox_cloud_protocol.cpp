@@ -58,7 +58,10 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
     const auto infos = QSerialPortInfo::availablePorts();
     QStringList _port_list;
 
-    debug("Serial port scanning...");
+    if(flag_first_scanning){
+        debug("Serial port scanning...");
+        flag_first_scanning = false;
+    }
 
     for (const QSerialPortInfo &info : infos) {
 #ifdef Q_OS_OSX
@@ -78,7 +81,10 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
     }
 
     if(_port_list.size() == 0){
-        debug("Can't find serial port device!!");
+        if(flag_first_serial_not_found){
+            debug("Can't find serial port device!!");
+            flag_first_serial_not_found = false;
+        }
         check_comport_timer->start(_CHECK_COMPORT_TIMER);
         return 0;
     }
@@ -118,10 +124,15 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
 //--------- private slot --------//
 void SM_CIRBOX_CLOUD_PROTOCOL::slotReadSerialPort(void)
 {
+    if(SM_CIRBOX_CLOUD_API::STATIC_BOOL_WAIT_TO_REBOOT){
+        cb_serial_port->clear(cb_serial_port->AllDirections);
+        return;
+    }
+
     while(cb_serial_port->canReadLine())
     {
         String _str = cb_serial_port->readLine();
-        //debug("read data >> " +_str);
+        debug("Read from client >> " + _str);
         if(_str.indexOf("CB+") != -1){
             char index1 = _str.indexOf('+');
             char index2 = _str.indexOf('\r') - 1;
@@ -150,7 +161,10 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadSerialPort(void)
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotReadCBProtocol(String _str)
-{
+{ 
+    if(SM_CIRBOX_CLOUD_API::STATIC_BOOL_WAIT_TO_REBOOT){
+        return;
+    }
 //    debug(">> " + _str);
     if(_str.indexOf(cmd.UPDATE) != -1){
 //        debug("#CMD1");
@@ -310,6 +324,9 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotSerialError(QSerialPort::SerialPortError _err
         debug("Error : " + cb_serial_port->errorString());
         cb_serial_port->close();
         check_comport_timer->start(_CHECK_COMPORT_TIMER);
+        flag_first_scanning = true;
+        flag_first_serial_not_found = true;
+
     }
 //    if(_error == )
 //    debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");

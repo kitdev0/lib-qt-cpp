@@ -1,8 +1,8 @@
 #ifndef QMQTT_MAIN_H
 #define QMQTT_MAIN_H
 
-#include "../../../../../lib-qt-cpp/qmqtt/qmqtt.h"
-#include "../../../../../lib-qt-cpp/qmqtt/qmqtt_client.h"
+#include "../../../../lib-qt-cpp/qmqtt/qmqtt.h"
+#include "../../../../lib-qt-cpp/qmqtt/qmqtt_client.h"
 #include <QString>
 #include <QObject>
 #include <QDebug>

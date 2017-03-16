@@ -1,8 +1,11 @@
 #ifndef _HM_UC20_H
 #define _HM_UC20_H
 
-#include "../../../../lib-qt-cpp/sw_module/sm_debug.h"
-#include "../../../../lib-qt-cpp/sw_module/sm_delay.h"
+//#include "../../../../../lib-qt-cpp/sw_module/sm_debug.h"
+//#include "../../../../../lib-qt-cpp/sw_module/sm_delay.h"
+
+#include "/Users/kitdev/Google Drive/CirboxDesign/lib-qt-cpp/sw_module/sm_debug.h"
+#include "/Users/kitdev/Google Drive/CirboxDesign/lib-qt-cpp/sw_module/sm_delay.h"
 #include "hm_gpio.h"
 
 #include <QElapsedTimer>
@@ -23,11 +26,15 @@
 
 
 #ifdef Q_OS_OSX
+#ifndef _UC20_DEBUG
 #define _UC20_DEBUG _DEBUG_SAY_ONLY
+#endif
 #else
+#ifndef _UC20_DEBUG
 //#define _UC20_DEBUG _DEBUG_SAY_ONLY
 #define _UC20_DEBUG _DEBUG_WRITE_ONLY
 //#define _UC20_DEBUG _DEBUG_SAY_AND_WRITE
+#endif
 #endif
 
 #define _WAIT_OK_TIMEOUT        1000
@@ -160,12 +167,12 @@ public:
     void setPwrOn(void);
     void setPwrOff(void);
     bool setURCPort(URC_t _port);		//QURCCFG=_port
+    bool saveConfig();                  //AT&W
     bool setEcho(bool _value);			//ATEn
     bool setPhoneFunc(uint8_t _value);	//CFUN=_value
     URC_t getURCPort(void);				//QURCCFG?
     String getIMEI(void);				//CGSN
     String getPhoneNum(OPERATOR_t _op);	//CUSD=1, //"*545*9#"-AIS, "*102*9#"-Dtac, "*933*9#"-True
-
 private:
 #ifdef _UC20_DEBUG
     SM_DEBUGCLASS *logDebug;

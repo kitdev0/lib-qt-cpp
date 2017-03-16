@@ -98,8 +98,8 @@ bool SM_UC20_AT_INTERNET_CLASS::connect(void)
             return 1;
         }
         debug("Set Connect internet >> Faile!!");
+//        emit signalResetGsmModule();
         return 0;
-        //emit signalResetGsmModule();
     }
 }
 

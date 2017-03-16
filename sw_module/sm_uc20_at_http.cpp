@@ -349,7 +349,7 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethod(bool _wait_flag)
             }
             else if (_data.indexOf("ERROR") != -1)
             {
-                debug("ERROR!!");
+                debug("ERROR >> " + _data);
                 return -1;
             }
         }

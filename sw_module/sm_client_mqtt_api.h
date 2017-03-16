@@ -5,8 +5,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include "../../../../../lib-qt-cpp/qmqtt/qmqtt.h"
-#include "../../../../../lib-qt-cpp/sw_module/sm_debug.h"
+#include "../../../../lib-qt-cpp/qmqtt/qmqtt.h"
+#include "../../../../lib-qt-cpp/sw_module/sm_debug.h"
+#include "sm_cirbox_cloud_api.h"
 
 
 #ifndef _DEBUG_SAY_ONLY
@@ -22,11 +23,15 @@
 #endif //_DEBUG_PRINT_AND_WRITE
 
 #ifdef Q_OS_OSX
-#define _SM_CLIENT_MQTT_API_DEBUG _DEBUG_SAY_ONLY
+#ifndef _CLIENT_MQTT_API_DEBUG
+#define _CLIENT_MQTT_API_DEBUG _DEBUG_SAY_ONLY
+#endif
 #else
-//#define _SM_CLIENT_MQTT_API_DEBUG _DEBUG_SAY_ONLY
-#define _SM_CLIENT_MQTT_API_DEBUG _DEBUG_WRITE_ONLY
-//#define _SM_CLIENT_MQTT_API_DEBUG _DEBUG_SAY_AND_WRITE
+#ifndef _CLIENT_MQTT_API_DEBUG
+//#define _CLIENT_MQTT_API_DEBUG _DEBUG_SAY_ONLY
+#define _CLIENT_MQTT_API_DEBUG _DEBUG_WRITE_ONLY
+//#define _CLIENT_MQTT_API_DEBUG _DEBUG_SAY_AND_WRITE
+#endif
 #endif
 
 #define _API_MAX 99
@@ -39,7 +44,8 @@
 #define _MQTT_NAME  "root"
 #define _MQTT_PASS  "cirbox2012"
 
-#define _CLIENT_TIMEOUT_TIME 30000
+#define _CLIENT_TIMEOUT_TIME    30000
+#define _TRY_TO_CONNECT_BROKER  3000
 
 #ifndef _LED_ON
 #define _LED_ON     false
@@ -70,18 +76,20 @@ private:
     SM_DEBUGCLASS *logDebug;
     QMQTT::Client *mqttClient;
     QTimer *client_online_time;
+    QTimer *try_to_connect_broker_timer;
 
     struct machine_t {
         bool c_state; //true = connect, false = disconnect
-        String c_status;
+        String c_status;//client status[Online,Offline]
         String id;
-        String m_status;
+        String m_status;//machine status [Error,Ready]
         String e_code;
     };
 
     machine_t machine_status[_CLIENT_NO_MAX];
 
     uint8_t client_no = 0;
+    int16_t last_mid = -1;
     void debug(String data);
     void returnMessage(String _id,String _message);
 
@@ -92,6 +100,11 @@ private slots:
     void slotCheckReportData(QJsonDocument *_json_doc);
     void slotCheckStatusData(QJsonDocument *_json_doc);
     void slotCheckClientTimeout();
+    void slotTryToConnectBroker();
+    void slotStopBroker();
+    void slotStartBroker();
+    void slotInit();
+    void slotStartTryToConnectBroker();
 };
 
 #endif // SM_CLIENT_MQTT_API_H
