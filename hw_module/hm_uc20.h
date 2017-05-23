@@ -154,13 +154,14 @@ public:
     char receiveData(void);
     bool sendData(QString _data, bool _flag_ln);
     bool sendData(int _value, bool _flag_ln);
+    bool sendDataByte(QByteArray _byte, bool _flag_ln);
     String receiveStringUntil(String _data);
     String receiveStringUntil(char _data);
     bool begin(uint32_t _baud, uint16_t _pwr_pin);
     bool begin(uint32_t _baud);
-    bool waitOK(uint32_t _time);
-    bool waitOK_ndb(uint32_t _time);
-    bool waitOK(uint32_t _time, bool _ack);
+    bool waitOK(uint32_t _time, String _str);
+    bool waitOK_ndb(uint32_t _time, String _str);
+    bool waitOK(uint32_t _time, bool _ack, String _debug);
     bool timeoutCheck(uint32_t _time);
     bool waitToReady(uint32_t _wait_time);
     bool setPwrKey(bool _value);
@@ -173,6 +174,9 @@ public:
     URC_t getURCPort(void);				//QURCCFG?
     String getIMEI(void);				//CGSN
     String getPhoneNum(OPERATOR_t _op);	//CUSD=1, //"*545*9#"-AIS, "*102*9#"-Dtac, "*933*9#"-True
+    int32_t getBaudRate();
+    bool setBaudRate(int32_t _baud);
+    void closeSerial();
 private:
 #ifdef _UC20_DEBUG
     SM_DEBUGCLASS *logDebug;
@@ -194,6 +198,7 @@ private:
     void serialSend(QByteArray _byte, bool _flag_ln);
 
 signals:
+    void signalTimeout();
 
 private slots:
     void slotReadyRead();

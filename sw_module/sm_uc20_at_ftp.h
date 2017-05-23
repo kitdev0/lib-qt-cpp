@@ -21,7 +21,7 @@
 #endif
 #else
 #ifndef _UC20_FTP_DEBUG
-#define _UC20_FTP_DEBUG _DEBUG_SAY_ONLY
+//#define _UC20_FTP_DEBUG _DEBUG_SAY_ONLY
 //#define _UC20_FTP_DEBUG _DEBUG_WRITE_ONLY
 //#define _UC20_FTP_DEBUG _DEBUG_SAY_AND_WRITE
 #endif
@@ -42,12 +42,15 @@ public:
     bool logoutFromServer(bool _wait_flag);
     bool setCurrentDir(String _path_name, bool _wait_flag);
     uint8_t getStatusFTPService(bool _wait_flag);
+    bool uploadFile(String _target_file_name, QFile *_file);
 private:
 #ifdef _UC20_FTP_DEBUG
     SM_DEBUGCLASS *logDebug;
 #endif // _UC20_SIM_DEBUG
     HM_UC20CLASS *gsmModule;
+    QElapsedTimer timeout;
     void debug(String data);
+//    bool streamFile(String _target_name, QByteArray *_byte_data, uint16_t _start_byte);
 };
 
 #endif // SM_UC20_AT_FTP_CLASS_H

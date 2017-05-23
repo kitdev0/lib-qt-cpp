@@ -124,7 +124,8 @@ public:
 	int16_t getMethod(bool _wait_flag);
 	int16_t checkGetRequestReturn(void);
 	int16_t postMethod(void);
-	int16_t postMethod(String data);
+    int16_t postMethod(String *data);
+    int16_t postMethod(QFile *_file, uint16_t _input_time, uint16_t _response_time);
 
 	String readMethod(bool _wait_flag);
 	String response_data;
@@ -136,6 +137,7 @@ private:
     HM_UC20CLASS *gsmModule;
     String  return_data;
     String URL_BUFF;
+    QElapsedTimer timeout;
     void debug(String data);
 };
 

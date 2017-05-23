@@ -41,7 +41,7 @@ bool SM_UC20_AT_INTERNET_CLASS::configure(String _apn, String _user, String _pas
 	_str += "1";
     if(!gsmModule->sendData(_str,1))
         return 0;
-	return(gsmModule->waitOK(_WAIT_OK_TIMEOUT));
+    return(gsmModule->waitOK(_WAIT_OK_TIMEOUT, "configure-1"));
 }
 
 bool SM_UC20_AT_INTERNET_CLASS::configure(void)
@@ -73,7 +73,7 @@ bool SM_UC20_AT_INTERNET_CLASS::configure(void)
 	debug(_debug + _str);
     if(!gsmModule->sendData(_str,1))
         return 0;
-	return(gsmModule->waitOK(_WAIT_OK_TIMEOUT));
+    return(gsmModule->waitOK(_WAIT_OK_TIMEOUT, "configure-2"));
 }
 
 bool SM_UC20_AT_INTERNET_CLASS::connect(void)
@@ -85,14 +85,14 @@ bool SM_UC20_AT_INTERNET_CLASS::connect(void)
         return 0;
     }
     _timer.start();
-    if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000)){
+    if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000, "connect-1")){
         debug("Set Connect internet >> OK");
         debug("wait time : " + String::number(_timer.elapsed()));
         return 1;
 	}
     else{
         _timer.start();
-        if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000)){
+        if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000, "connect-2")){
             debug("Set Connect internet >> OK");
             debug("wait time : " + String::number(_timer.elapsed()));
             return 1;
@@ -111,7 +111,7 @@ bool SM_UC20_AT_INTERNET_CLASS::disConnect()
         return 0;
     }
 
-    if(gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000)){
+    if(gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000, "disConnect")){
         debug("Set Disable internet >> Success");
         return 1;
     }
@@ -179,7 +179,7 @@ String SM_UC20_AT_INTERNET_CLASS::getIP()
             {
                 char index1 = _str.indexOf("\"");
                 char index2 = _str.indexOf(("\""), index1 + 1);
-                gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT);
+                gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT, "getIP");
                 return(_str.mid(index1 + 1, index2 - index1));
             }
             else if (_str.indexOf("OK") != -1)
@@ -202,10 +202,10 @@ bool SM_UC20_AT_INTERNET_CLASS::resetConnecting(void)
     gsmModule->sendData("+++",1); // Exit from post method loob.
 
     for(int i=0;i < 5;i++){
-        if(disConnect())
-            return isConnect();
+        if(disConnect())//Disconnect success
+            return true;
     }
 
-    emit signalResetGsmModule();
+//    emit signalResetGsmModule();
     return false;
 }

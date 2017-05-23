@@ -252,7 +252,7 @@ void SM_DEBUGCLASS::writeLog(QString _data)
 {
     if(STATIC_BOOL_LOG_CAN_WRITE)
     {
-        QString _logPath = log_path + QDateTime::currentDateTime().toString("dd_MM_yyyy");
+        QString _logPath = log_path + QDateTime::currentDateTime().toString("ddMMyyyy");
         String _str = setFormat(_data);
         if(!checkAndMakeLogDir(_logPath))
         {

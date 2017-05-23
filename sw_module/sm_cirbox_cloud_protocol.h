@@ -22,8 +22,8 @@
 #ifdef Q_OS_OSX
 #define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_SAY_ONLY
 #else
-//#define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_SAY_ONLY
-#define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_WRITE_ONLY
+#define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_SAY_ONLY
+//#define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_WRITE_ONLY
 //#define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_SAY_AND_WRITE
 #endif
 
@@ -39,7 +39,7 @@
 //
 #define _CB_CMD_TRUP "TRUP"
 
-#define _CLIENT_TIMEOUT_TIME 15000
+#define _CLIENT_TIMEOUT_TIME 60000
 #define _CHECK_COMPORT_TIMER 5000
 
 class SM_CIRBOX_CLOUD_PROTOCOL : public QObject
@@ -67,7 +67,9 @@ private:
     bool flag_first_serial_not_found = true;
     int8_t machine_client_connect_ok = -1;
 
+    int16_t last_usb_err = -1;
     uint32_t cb_serial_baud;
+    int16_t last_mid_no = -1;
 
     void debug(QString data);
     void sendData(String _data);
@@ -84,6 +86,7 @@ signals:
     void signalClientISConnect();
 
 public slots:
+    void slotResetClientTimeoutTime();
 
 private slots:
     void slotReadSerialPort(void);

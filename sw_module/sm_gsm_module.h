@@ -51,6 +51,10 @@
 #define _LED_OFF     _HIGH
 #endif
 
+#ifndef _BAUD_RATE_DEFINE
+#define _BAUD_RATE_DEFINE   115200
+#endif
+
 class SM_GSM_MODULE : public QObject
 {
     Q_OBJECT
@@ -92,6 +96,7 @@ signals:
     void signalInternetIsOK(void);
     void signalSetLEDGsm(bool _state);
     void signalPacketNetworkIsRegis();
+    void signalTimeout();
 
 public slots:
     void slotResetGsmModule();

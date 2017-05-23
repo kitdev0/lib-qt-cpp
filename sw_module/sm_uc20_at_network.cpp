@@ -52,11 +52,11 @@ bool SM_UC20_AT_NETWORK_CLASS::getNetworkRegis(void)	//CREG?
                 debug(_str);
                 if (_state == 1) {
                     debug("<< Ready");
-                    return (gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT));
+                    return (gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT, "getNetworkRegis-1"));
                 }
                 else {
                     debug("<< Not ready!!");
-                    gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT);
+                    gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT, "getNetworkRegis-2");
                     return 0;
                 }
             }
@@ -89,7 +89,7 @@ uint8_t SM_UC20_AT_NETWORK_CLASS::getSignalQuality(void)
                 int _index2 = _str.indexOf(",");
                 _signal = _str.mid(_index1 + 1, _index2 - _index1 - 1).toInt();
 //                debug(" << " + String::number(_signal,10));
-                gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT);
+                gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT, "getSignalQuality");
                 return(_signal);
             }
         }
@@ -127,7 +127,7 @@ String SM_UC20_AT_NETWORK_CLASS::getOperator(void)
                 String _res = _str.mid(_str.indexOf("\""));
                 //debug("Operator =  " + _str);
                 debug("<< " + _res);
-                gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT);
+                gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT, "getOperator");
                 return(_res);
             }
         }
@@ -157,7 +157,7 @@ bool SM_UC20_AT_NETWORK_CLASS::setOperator(void)
 	debug(_debug + _str);
     if(!gsmModule->sendData(_str,1))
         return 0;
-    return(gsmModule->waitOK(_WAIT_OK_TIMEOUT + 15000));
+    return(gsmModule->waitOK(_WAIT_OK_TIMEOUT + 15000, "setOperator"));
 }
 
 

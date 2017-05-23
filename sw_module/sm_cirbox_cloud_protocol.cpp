@@ -20,7 +20,7 @@ SM_CIRBOX_CLOUD_PROTOCOL::SM_CIRBOX_CLOUD_PROTOCOL(SM_CIRBOX_CLOUD_API *api_port
     connect(this,SIGNAL(signalGetDataValue(String)),this,SLOT(slotGetDataValue(String)));
     connect(this,SIGNAL(signalSetDataValue(String)),this,SLOT(slotSetDataValue(String)));
     connect(check_comport_timer,SIGNAL(timeout()),this,SLOT(slotCheckComport()));
-    connect(cb_serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this,SLOT(slotSerialError(QSerialPort::SerialPortError)));
+//    connect(cb_serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this,SLOT(slotSerialError(QSerialPort::SerialPortError)));
 }
 
 SM_CIRBOX_CLOUD_PROTOCOL::~SM_CIRBOX_CLOUD_PROTOCOL()
@@ -58,10 +58,10 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
     const auto infos = QSerialPortInfo::availablePorts();
     QStringList _port_list;
 
-    if(flag_first_scanning){
-        debug("Serial port scanning...");
-        flag_first_scanning = false;
-    }
+//    if(flag_first_scanning){
+////        debug("Serial port scanning...");
+//        flag_first_scanning = false;
+//    }
 
     for (const QSerialPortInfo &info : infos) {
 #ifdef Q_OS_OSX
@@ -73,7 +73,7 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
 #ifdef Q_OS_LINUX
         if(info.portName().indexOf(String(_RPI_USB_SERIAL_PORT_DEVICE)) != -1  || info.portName().indexOf(String(_RPI_ARDUINO_SERIAL_PORT_DEVICE)) != -1)
         {
-            debug(info.portName());
+//            debug(info.portName());
             _port_list << info.portName();
         }
 #endif
@@ -81,11 +81,12 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
     }
 
     if(_port_list.size() == 0){
-        if(flag_first_serial_not_found){
-            debug("Can't find serial port device!!");
-            flag_first_serial_not_found = false;
-        }
-        check_comport_timer->start(_CHECK_COMPORT_TIMER);
+//        if(flag_first_serial_not_found){
+//            debug("Can't find serial port device!!");
+//            flag_first_serial_not_found = false;
+//        }
+        if(!check_comport_timer->isActive())
+            check_comport_timer->start(_CHECK_COMPORT_TIMER);
         return 0;
     }
 
@@ -93,16 +94,19 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
     {
 //        if(_port_list[i] != api->ethernet->module->serial_port->portName())
 //        {
+        if(cb_serial_port->isOpen())
+            cb_serial_port->close();
+
         cb_serial_port->setPortName(_port_list[i]);
         cb_serial_port->setBaudRate(cb_serial_baud);
         cb_serial_port->setParity(QSerialPort::NoParity);
+
         if (cb_serial_port->open(QIODevice::ReadWrite)){
             //cb_serial_port->setDataTerminalReady(true);
             cb_serial_port->setDataTerminalReady(true);
             debug("Port name : " + _port_list[i]);
             debug("Open port >> passed");
-            //connect(serial_port, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
-            //connect(cb_serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this,SLOT(slotSerialError(QSerialPort::SerialPortError)));
+            connect(cb_serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this,SLOT(slotSerialError(QSerialPort::SerialPortError)));
             connect(api,SIGNAL(signalResponseAPISuccess()),this,SLOT(slotReturnSuccess()));
             connect(api,SIGNAL(signalResponseAPIUnsuccess()),this,SLOT(slotReturnUnsuccess()));
             return true;
@@ -111,7 +115,8 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
             debug("Port name : " + _port_list[i]);
             debug("Open port >> failed");
             debug("Error : " + cb_serial_port->errorString());
-            cb_serial_port->close();
+//            if(cb_serial_port->isOpen())
+//                cb_serial_port->close();
             check_comport_timer->start(_CHECK_COMPORT_TIMER);
         }
 //        }
@@ -132,7 +137,18 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadSerialPort(void)
     while(cb_serial_port->canReadLine())
     {
         String _str = cb_serial_port->readLine();
-        debug("Read from client >> " + _str);
+//        debug("Read from client >> " + _str);
+        if(_str.indexOf("#")){
+            char index1 = _str.indexOf('#');
+            char index2 = _str.indexOf('C') - 1;
+            String _cb_no =  _str.mid(index1 + 1, index2-index1);
+            debug("mid = " + _cb_no);
+            if(_cb_no.toInt() == last_mid_no)
+                return;
+            else
+                last_mid_no = _cb_no.toInt();
+        }
+
         if(_str.indexOf("CB+") != -1){
             char index1 = _str.indexOf('+');
             char index2 = _str.indexOf('\r') - 1;
@@ -140,7 +156,7 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadSerialPort(void)
             client_online_time->start(_CLIENT_TIMEOUT_TIME);
             emit signalReadCBProtocol(_cb_data);
             emit signalSetLEDClient(_LED_ON);
-            if(machine_client_connect_ok == 0)
+            if(machine_client_connect_ok != 1)
             {
                 QJsonDocument _json_report;
                 QJsonObject _json_object;
@@ -232,6 +248,16 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnError()
     sendData("ERROR\r\n");
 }
 
+void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnSuccess()
+{
+    sendData("SUCCESS\r\n");
+}
+
+void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnUnsuccess()
+{
+    sendData("UNSUCCESS\r\n");
+}
+
 void SM_CIRBOX_CLOUD_PROTOCOL::slotGetDataValue(String _str)
 {
 
@@ -281,16 +307,6 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotSetDataValue(String _str)
     }
 }
 
-void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnSuccess()
-{
-    sendData("\r\nSUCCESS\r\n");
-}
-
-void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnUnsuccess()
-{
-    sendData("\r\nUNSUCCESS\r\n");
-}
-
 void SM_CIRBOX_CLOUD_PROTOCOL::slotCheckClientTimeout()
 {
     if(machine_client_connect_ok != 0)
@@ -306,6 +322,11 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotCheckClientTimeout()
 
         debug("Machine client >> OFFLINE");
 
+        if(cb_serial_port->isOpen())
+            cb_serial_port->close();
+        if(!check_comport_timer->isActive())
+            check_comport_timer->start(_CHECK_COMPORT_TIMER);
+
         emit signalReportDataToCloud(&_json_report);
     }
     emit signalSetLEDClient(_LED_OFF);
@@ -313,21 +334,115 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotCheckClientTimeout()
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotCheckComport()
 {
-    check_comport_timer->stop();
+    if(check_comport_timer->isActive())
+        check_comport_timer->stop();
     tryToConnect();
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotSerialError(QSerialPort::SerialPortError _error)
 {
-    if (_error == QSerialPort::ResourceError || _error == QSerialPort::UnknownError) {
-        debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");
-        debug("Error : " + cb_serial_port->errorString());
-        cb_serial_port->close();
-        check_comport_timer->start(_CHECK_COMPORT_TIMER);
-        flag_first_scanning = true;
-        flag_first_serial_not_found = true;
+//    if (_error == QSerialPort::ResourceError || _error == QSerialPort::UnknownError) {
+//        debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");
+//        debug("Error : " + cb_serial_port->errorString());
+//        cb_serial_port->close();
+//        check_comport_timer->start(_CHECK_COMPORT_TIMER);
+//        flag_first_scanning = true;
+//        flag_first_serial_not_found = true;
+//    }
 
+    if(_error == last_usb_err){
+        return;
     }
+
+    last_usb_err = _error;
+
+    if(_error == QSerialPort::NoError){
+        debug("#NoError");
+        return;
+    }
+
+//    if(_error == QSerialPort::OpenError){
+//        debug("#OpenError");
+//        return;
+//    }
+
+//    if(_error == QSerialPort::ReadError){
+//        debug("#ReadError");
+//        return;
+//    }
+    if(_error == QSerialPort::NotOpenError){
+        debug("#NotOpenError");
+        return;
+    }
+
+    switch (_error)
+    {
+//    case QSerialPort::NoError:
+////        debug("#NoError");
+//        break;//return
+    case QSerialPort::ReadError:
+        debug("#ReadError");
+        break;
+//    case QSerialPort::NotOpenError:
+////        debug("#NotOpenError");
+//        break;
+    case QSerialPort::OpenError:
+        debug("#OpenError");
+        break;
+    case QSerialPort::DeviceNotFoundError:
+        debug("#DeviceNotFoundError");
+        break;
+    case QSerialPort::PermissionError:
+        debug("#PermissionError");
+        break;
+    case QSerialPort::ParityError:
+        debug("#ParityError");
+        break;
+    case QSerialPort::FramingError:
+        debug("#FramingError");
+        break;
+    case QSerialPort::BreakConditionError:
+        debug("#BreakConditionError");
+        break;
+    case QSerialPort::WriteError:
+        debug("#WriteError");
+        break;
+    case QSerialPort::ResourceError:
+        debug("#ResourceError");
+        break;
+    case QSerialPort::UnsupportedOperationError:
+        debug("#UnsupportedOperationError");
+        break;
+    case QSerialPort::UnknownError:
+        debug("#UnknownError");
+        break;
+    case QSerialPort::TimeoutError:
+        debug("#TimeoutError");
+        break;
+    default:
+        debug("#ErrorNotDefine");
+        break;
+    }
+
+//    if(cb_serial_port->isOpen())
+//        cb_serial_port->close();
+    disconnect(cb_serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this,SLOT(slotSerialError(QSerialPort::SerialPortError)));
+
+    if(!check_comport_timer->isActive()){
+        check_comport_timer->start(_CHECK_COMPORT_TIMER);
+    }
+
+//    if(cb_serial_port->isOpen()){
+//        debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");
+//        debug("Error : " + cb_serial_port->errorString());
+//        cb_serial_port->close();
+//    }
+////    if(!check_comport_timer->isActive())
+////        check_comport_timer->start(_CHECK_COMPORT_TIMER);
+//    flag_first_scanning = true;
+//    flag_first_serial_not_found = true;
+
+
 //    if(_error == )
 //    debug("Port name : " + cb_serial_port->portName() + " >> lost Connection!!");
 //    debug("Error : " + cb_serial_port->errorString());
@@ -342,10 +457,16 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotSerialError(QSerialPort::SerialPortError _err
 
 // private slot //
 
+void SM_CIRBOX_CLOUD_PROTOCOL::slotResetClientTimeoutTime()
+{
+    if(client_online_time->isActive())
+        client_online_time->start(_CLIENT_TIMEOUT_TIME);
+}
+
 //--------- public --------//
 bool SM_CIRBOX_CLOUD_PROTOCOL::begin(uint32_t _baud)
 {
-    debug("## begin ##");
+//    debug("## begin ##");
     is_begin = true;
     cb_serial_baud = _baud;
     client_online_time->start(_CLIENT_TIMEOUT_TIME);

@@ -113,7 +113,7 @@ bool SM_UC20_AT_FILE_CLASS::available()
 
 bool SM_UC20_AT_FILE_CLASS::del(FILE_PATTERN_t pattern, String fn)
 {
-    debug("del");
+//    debug("del");
     if(!gsmModule->sendData("AT+QFDEL=\"", 0))
         return 0;
 
@@ -132,7 +132,7 @@ bool SM_UC20_AT_FILE_CLASS::del(FILE_PATTERN_t pattern, String fn)
 	}
     if(!gsmModule->sendData("\"",1))
         return 0;
-    return gsmModule->waitOK(_WAIT_OK_TIMEOUT);
+    return gsmModule->waitOK(_WAIT_OK_TIMEOUT, "file - del");
 }
 
 bool SM_UC20_AT_FILE_CLASS::close(int handle)
@@ -144,7 +144,7 @@ bool SM_UC20_AT_FILE_CLASS::close(int handle)
         return 0;
     if(!gsmModule->sendData("",1))
         return 0;
-    return gsmModule->waitOK(_WAIT_OK_TIMEOUT);
+    return gsmModule->waitOK(_WAIT_OK_TIMEOUT, "file - close");
 }
 
 bool SM_UC20_AT_FILE_CLASS::beginWrite(int handle, int size)
@@ -189,7 +189,7 @@ bool SM_UC20_AT_FILE_CLASS::beginWrite(int handle, int size)
 
 bool SM_UC20_AT_FILE_CLASS::waitFinish()
 {
-	return(gsmModule->waitOK(10000));
+    return(gsmModule->waitOK(10000, "waitFinish"));
 }
 
 bool SM_UC20_AT_FILE_CLASS::seekAtStart(int handle)
@@ -213,7 +213,7 @@ bool SM_UC20_AT_FILE_CLASS::seek(int handle, long start_at)
         return 0;
     if(!gsmModule->sendData("0",1))
         return 0;
-	return(gsmModule->waitOK(_WAIT_OK_TIMEOUT));
+    return(gsmModule->waitOK(_WAIT_OK_TIMEOUT, "file - seek"));
 }
 
 int SM_UC20_AT_FILE_CLASS::read(int handle, int buf_size, char *buf)
@@ -277,7 +277,7 @@ int SM_UC20_AT_FILE_CLASS::read(int handle, int buf_size, char *buf)
             return (-2);
         }
 	}
-	gsmModule->waitOK(_WAIT_OK_TIMEOUT);
+    gsmModule->waitOK(_WAIT_OK_TIMEOUT, "file - read");
 	return(size);
 }
 
@@ -313,7 +313,7 @@ int SM_UC20_AT_FILE_CLASS::open(FILE_PATTERN_t pattern, String fn)
                 String str = _req.mid(index1 + 1);
                 //Serial.print("OK xxx");
                 //Serial.print(str);
-                gsmModule->waitOK(_WAIT_OK_TIMEOUT);
+                gsmModule->waitOK(_WAIT_OK_TIMEOUT, "file - open");
                 return(str.toInt());
             }
             else if (_req.indexOf("ERROR") != -1)
@@ -382,7 +382,7 @@ long SM_UC20_AT_FILE_CLASS::list(FILE_PATTERN_t pattern, String fn)
             {
                 char index1 = _req.indexOf(",");
                 String str_l = _req.mid(index1 + 1);
-                gsmModule->waitOK(_WAIT_OK_TIMEOUT);
+                gsmModule->waitOK(_WAIT_OK_TIMEOUT, "file -list");
                 return(str_l.toLong());
             }
             else if (_req.indexOf("ERROR") != -1)
@@ -450,7 +450,7 @@ long SM_UC20_AT_FILE_CLASS::space(FILE_PATTERN_t pattern, unsigned char mode)//M
                     String str_l = _req.mid(index1 + 1);
                     _l = str_l.toLong();
                 }
-                gsmModule->waitOK(_WAIT_OK_TIMEOUT);
+                gsmModule->waitOK(_WAIT_OK_TIMEOUT, "file - space");
                 return(_l);
             }
         }

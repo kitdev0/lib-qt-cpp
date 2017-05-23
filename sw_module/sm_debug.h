@@ -27,7 +27,8 @@
 #endif
 
 #ifndef _FILE_SIZE
-#define _FILE_SIZE 1000000 //1Mbyte
+//#define _FILE_SIZE 1000000 //1Mbyte
+#define _FILE_SIZE 100000 //100Kbyte
 #endif
 
 #ifndef _DIR_SIZE

@@ -25,7 +25,7 @@
 #else
 #ifndef _UC20_SIM_DEBUG
 //#define _UC20_SIM_DEBUG _DEBUG_SAY_ONLY
-#define _UC20_SIM_DEBUG _DEBUG_WRITE_ONLY
+//#define _UC20_SIM_DEBUG _DEBUG_WRITE_ONLY
 //#define _UC20_SIM_DEBUG _DEBUG_SAY_AND_WRITE
 #endif
 #endif

@@ -28,8 +28,8 @@
 #else
 #ifndef _CLOUD_API_DEBUG
 //#define _CLOUD_API_DEBUG _DEBUG_SAY_ONLY
-//#define _CLOUD_API_DEBUG _DEBUG_WRITE_ONLY
-#define _CLOUD_API_DEBUG _DEBUG_SAY_AND_WRITE
+#define _CLOUD_API_DEBUG _DEBUG_WRITE_ONLY
+//#define _CLOUD_API_DEBUG _DEBUG_SAY_AND_WRITE
 #endif
 #endif
 
@@ -37,6 +37,7 @@
 #define _MESSAGE_SUCCESS        "success"
 
 #define _API_V1_URL         "http://cirbox.cloud/api/v1/vending/"
+#define _API_V1_LOG_URL     "http://cirbox.cloud/api/v1/log?"
 #define _CIRBOX_CLOUD_URL   "http://cirbox.cloud"
 //#define _CIRBOX_CLOUD_URL   "http://cirbox-cloud-asia.appspot.com"
 //#define _API_V1_URL         "http://cirbox-cloud-asia.appspot.com/api/v1/vending/"
@@ -93,7 +94,8 @@ public:
 public slots:
     void slotReqUpdateAPI(QJsonDocument *_json_report);
     void slotCreatRunAppScript(QString _service_id);
-    bool slotUploadLogFile();
+    bool slotUploadLogFile(String _date);
+    bool slotPostLog();
 private:
     SM_DEBUGCLASS *logDebug;
 
@@ -105,9 +107,11 @@ private:
     bool flag_set_led_off_all = false;
 
     uint8_t last_api_url_set = 0;
+    uint8_t try_synctime_cnt = 0;
 
     uint16_t api_buff = 0;
     uint16_t last_api_buff = 0;
+
 
     QTimer *check_api_buff_to_send_timer;
     QTimer *client_ping_pulling_timer;
@@ -117,6 +121,7 @@ private:
     QJsonObject *json_api_data;
 
     QString machine_type = "";
+    QString date_get_log = "";
 
     void debug(QString data);
     bool reportData(QJsonDocument *_json_report);
@@ -130,12 +135,14 @@ private:
     void cmdChmodX_RunAppScript();
     void cmdRemove_interfaceFile();
     void checkResponseIDToChangeService(QString _response_id);
+    QString responseCmdData(QJsonDocument *_json_response);
 signals:
     void signalResponseAPISuccess();
     void signalResponseAPIUnsuccess();
     void signalSetLEDServer(bool _state);
     void signalConnectServerOK();
     void signalOffLEDAll();
+    void signalResetClientTimeoutTime();
 private slots:
     void slotStartToCheckAPIBuff(void);
     void slotStopToCheckAPIBuff();

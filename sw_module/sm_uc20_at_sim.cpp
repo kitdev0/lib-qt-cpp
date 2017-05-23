@@ -38,7 +38,7 @@ void SM_UC20_AT_SIM_CLASS::debug(String data)
 
 bool SM_UC20_AT_SIM_CLASS::getSIMState(void)	//CPIN?
 {
-    debug("get SIM-state");
+//    debug("get SIM-state");
 
     if(!gsmModule->sendData("AT+CPIN?",1))
         return 0;
@@ -51,8 +51,8 @@ bool SM_UC20_AT_SIM_CLASS::getSIMState(void)	//CPIN?
             //debug("read data >> " + _str);
             if (_str.indexOf("READY") != -1)
             {
-                debug("<< READY");
-                return(gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT));
+//                debug("<< READY");
+                return(gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT, "getSIMState"));
             }
             if (_str.indexOf("ERROR") != -1)
             {
@@ -87,7 +87,7 @@ String SM_UC20_AT_SIM_CLASS::getCCID(void)				//QCCID
 //                debug("#A = " + String::number(_index2));
                 String _res = _str.mid(_index1,_index2);
 //                debug("<< " + _res);
-                gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT);
+                gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT, "getCCID");
                 return (_res);
             }
         }

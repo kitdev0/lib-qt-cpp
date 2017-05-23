@@ -75,7 +75,7 @@ bool HM_UC20CLASS::tryToConnect(void)
     serial_port->setBaudRate(serial_baud);
     serial_port->setParity(QSerialPort::NoParity);
 
-    debug("Serial port scanning...");
+//    debug("Serial port scanning...");
 
     for (const QSerialPortInfo &info : infos) {
 #ifdef Q_OS_OSX
@@ -102,8 +102,8 @@ bool HM_UC20CLASS::tryToConnect(void)
     {
         serial_port->setPortName(_port_list[i]);
         if (serial_port->open(QIODevice::ReadWrite)){
-            debug("Port name : " + _port_list[i]);
-            debug("Open port >> passed");
+//            debug("Port name : " + _port_list[i]);
+//            debug("Open port >> passed");
             //connect(serial_port, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
             if(simpleCommand()){
                 return true;
@@ -124,7 +124,7 @@ bool HM_UC20CLASS::tryToConnect(void)
 
 bool HM_UC20CLASS::connectToGSMPort(void)
 {
-    debug("Connect to GSM port...");
+//    debug("Connect to GSM port...");
     serial_port = new QSerialPort();
     String _port_name = "";
 #ifdef _GSM_MODULE_SERIAL_PORT
@@ -136,8 +136,8 @@ bool HM_UC20CLASS::connectToGSMPort(void)
     serial_port->setBaudRate(serial_baud);
     serial_port->setParity(QSerialPort::NoParity);
     if (serial_port->open(QIODevice::ReadWrite)){
-        debug("Port name : " + _port_name);
-        debug("Open port >> passed");
+//        debug("Port name : " + _port_name);
+//        debug("Open port >> passed");
 //        connect(serial_port, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
 //        serial_port->write("ATI\r\n");
 #ifdef _SEND_SIMPLE_COMMAND
@@ -165,7 +165,7 @@ bool HM_UC20CLASS::simpleCommand(void) //AT
     sendData("ATI",1);
     debug("Send simple command");
 
-    return waitOK(_WAIT_OK_TIMEOUT+1000);
+    return waitOK(_WAIT_OK_TIMEOUT+1000, "simpleCommand");
 }
 
 bool HM_UC20CLASS::connectModule(void)
@@ -174,12 +174,12 @@ bool HM_UC20CLASS::connectModule(void)
 #ifdef _GSM_MODULE_SERIAL_PORT
     is_connected = true;//make to send
     if (connectToGSMPort()){
-        debug("Module connected. ^_^");
+        debug("3G Module connected. ^_^");
         is_connected = true;
         return true;
     }
     else{
-        debug("Can't connect module. T_T");
+        debug("Can't connect 3G Module. T_T");
         is_connected = false;
         return false;
     }
@@ -273,6 +273,19 @@ bool HM_UC20CLASS::sendData(int _value, bool _flag_ln)
     }
 }
 
+bool HM_UC20CLASS::sendDataByte(QByteArray _byte, bool _flag_ln)
+{
+    if(is_connected)
+    {
+        serialSend(_byte,_flag_ln);
+        return true;
+    }
+    else{
+        debug("Module is don't connecting!!");
+        return false;
+    }
+}
+
 String HM_UC20CLASS::receiveStringUntil(char _data)
 {
     return receiveStringUntil(String(_data));
@@ -310,10 +323,10 @@ bool HM_UC20CLASS::setPwrKey(bool _value)
 {
 	uint8_t _tryCnt = 0;
 	bool _flag = false;
-	if(_value)
-        debug("set Power Key >> ON");
-	else
-        debug("set Power Key >> OFF");
+//	if(_value)
+//        debug("set Power Key >> ON");
+//	else
+//        debug("set Power Key >> OFF");
     setPwrKeyPinActive();
 
     while (1)
@@ -324,7 +337,7 @@ bool HM_UC20CLASS::setPwrKey(bool _value)
 //			debug(_str);
             if (_str.indexOf("RDY") != -1)
 			{
-                debug("Power-ON");
+//                debug("Power-ON");
                 if (_value == _HIGH) {
 					_flag = true;
 					break;
@@ -334,7 +347,7 @@ bool HM_UC20CLASS::setPwrKey(bool _value)
 			}
             else if (_str.indexOf("POWERED DOWN") != -1)
 			{
-                debug("Power-OFF");
+//                debug("Power-OFF");
                 if (_value == _LOW) {
 					_flag = true;
 					break;
@@ -346,6 +359,7 @@ bool HM_UC20CLASS::setPwrKey(bool _value)
 		}
         else if(!serial_port->waitForReadyRead(10000)){
             debug("setPwr >> Response timeout!!");
+            emit signalTimeout();
             if (_tryCnt >= 1) {
                 _flag = false;
                 break;
@@ -405,26 +419,27 @@ bool HM_UC20CLASS::waitToReady(uint32_t _wait_time)
 		}
         else if(!serial_port->waitForReadyRead(_wait_time)){
             debug("waitToReady >> Response timeout!!");
+            emit signalTimeout();
             return 0;
         }
 	}
 }
 
-bool HM_UC20CLASS::waitOK(uint32_t _time)
+bool HM_UC20CLASS::waitOK(uint32_t _time, String _str)
 {
 	bool _res = false;
-	_res = waitOK(_time, true);
+    _res = waitOK(_time, true, _str);
 	return _res;
 }
 
-bool HM_UC20CLASS::waitOK_ndb(uint32_t _time)
+bool HM_UC20CLASS::waitOK_ndb(uint32_t _time, String _str)
 {
 	bool _res = false;
-	_res = waitOK(_time, false);
+    _res = waitOK(_time, false, _str);
 	return _res;
 }
 
-bool HM_UC20CLASS::waitOK(uint32_t _time, bool _ndb)
+bool HM_UC20CLASS::waitOK(uint32_t _time, bool _ndb , String _debug)
 {
     while(1)
     {
@@ -439,14 +454,15 @@ bool HM_UC20CLASS::waitOK(uint32_t _time, bool _ndb)
             }
             if(_str.indexOf("ERROR") != -1){
                 if (_ndb)
-                    debug("<< " + _str);
+                    debug(_debug + " >> " + _str);
                 return 0;
             }
 //            timeoutStart();
         }
         else if(!serial_port->waitForReadyRead(_time)){
             if (_ndb)
-                debug("waitOK >> Response timeout!!");
+                debug(_debug + " >> waitOK - Response timeout!!");
+            emit signalTimeout();
             return 0;
         }
     }
@@ -457,7 +473,7 @@ bool HM_UC20CLASS::saveConfig()
     if(!sendData("AT&W",1))
         return 0;
     debug("saveConfig");
-    return waitOK_ndb(_WAIT_OK_TIMEOUT);
+    return waitOK_ndb(_WAIT_OK_TIMEOUT, "saveConfig");
 }
 
 bool HM_UC20CLASS::setURCPort(URC_t _port)		//QURCCFG=_port
@@ -478,7 +494,7 @@ bool HM_UC20CLASS::setURCPort(URC_t _port)		//QURCCFG=_port
         debug("set URC-Port >> UART1");
 	}
 	
-    return waitOK_ndb(_WAIT_OK_TIMEOUT);
+    return waitOK_ndb(_WAIT_OK_TIMEOUT, "setURCPort");
 }
 
 bool HM_UC20CLASS::setEcho(bool _value)			//ATEn
@@ -486,15 +502,15 @@ bool HM_UC20CLASS::setEcho(bool _value)			//ATEn
     if (_value) {
         if(!sendData("ATE1",1))
             return 0;
-        debug("set Echo >> ON");
+//        debug("set Echo >> ON");
     }
     else {
         if(!sendData("ATE0",1))
             return 0;
-        debug("set Echo >> OFF");
+//        debug("set Echo >> OFF");
     }
 
-    return waitOK(_WAIT_OK_TIMEOUT);
+    return waitOK(_WAIT_OK_TIMEOUT,"setEcho");
 }
 
 bool HM_UC20CLASS::setPhoneFunc(uint8_t _value)	//CFUN=_value
@@ -502,15 +518,15 @@ bool HM_UC20CLASS::setPhoneFunc(uint8_t _value)	//CFUN=_value
     String _str = "AT+CFUN=" + String::number(_value,10);
     if(!sendData(_str,1))
         return 0;
-    debug(">> " + _str);
+//    debug(">> " + _str);
 	//debug("set Phone Func. >> " + String(_value));
 
-    return waitOK(10000);
+    return waitOK(10000,"setPhoneFunc");
 }
 
 URC_t HM_UC20CLASS::getURCPort(void)			//QURCCFG?
 {
-    debug("get URC-Port");
+//    debug("get URC-Port");
     if(!sendData("AT+QURCCFG?",1))
         return _URC_UNKNOW;
 
@@ -522,22 +538,23 @@ URC_t HM_UC20CLASS::getURCPort(void)			//QURCCFG?
             //debug("read data >> " +_str);
             if (_str.indexOf("usbat") != -1) {
                 debug("URC : USB-AT");
-                waitOK_ndb(_WAIT_OK_TIMEOUT);
+                waitOK_ndb(_WAIT_OK_TIMEOUT, "getURCPort");
                 return _URC_USB_AT;
             }
             else if (_str.indexOf("usbmodem") != -1) {
                 debug("URC : USB-MODEM");
-                waitOK_ndb(_WAIT_OK_TIMEOUT);
+                waitOK_ndb(_WAIT_OK_TIMEOUT, "getURCPort");
                 return _URC_USB_MODEM;
             }
             else if (_str.indexOf("uart1") != -1) {
                 debug("URC : UART1");
-                waitOK_ndb(_WAIT_OK_TIMEOUT);
+                waitOK_ndb(_WAIT_OK_TIMEOUT, "getURCPort");
                 return _URC_UART1;
             }
         }
         else if(!serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
             debug("getURCPort >> Response timeout!!");
+            emit signalTimeout();
             return _URC_UNKNOW;
         }
 	}
@@ -558,12 +575,13 @@ String HM_UC20CLASS::getIMEI(void)
             if (_str.length() > 5)
             {
                 debug("IMEI : " + _str);
-                waitOK(_WAIT_OK_TIMEOUT);
+                waitOK(_WAIT_OK_TIMEOUT, "getIMEI");
                 return _str;
             }
         }
         else if(!serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
             debug("getIMEI >> Response timeout!!");
+            emit signalTimeout();
             return "";
         }
     }
@@ -602,9 +620,58 @@ String HM_UC20CLASS::getPhoneNum(OPERATOR_t _op)		//CUSD=1, //"*545*9#"-AIS, "*1
         }
         else if(!serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT + 10000)){
             debug("getPhoneNum >> Response timeout!!");
+            emit signalTimeout();
             return 0;
         }
 	}
+}
+
+int32_t HM_UC20CLASS::getBaudRate(void)
+{
+    if(!sendData("AT+IPR?",1))
+        return -1;
+
+    while (1)
+    {
+        if(serial_port->canReadLine())
+        {
+            String _str = serial_port->readLine();
+            //debug("read data >> " +_str);
+            if (_str.indexOf("+IPR:") != -1)
+            {
+                uint8_t _st = _str.indexOf(":") + 1;
+                int32_t _res = _str.mid(_st,_str.length() - _st).toInt();
+//                debug("Baud rate : " + String::number(_res));
+                return (_res);
+            }
+        }
+        else if(!serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
+            debug("getBaudRate >> Response timeout!!");
+            emit signalTimeout();
+            return -1;
+        }
+    }
+}
+
+bool HM_UC20CLASS::setBaudRate(int32_t _baud)
+{
+    String _data = "AT+IPR=" + String::number(_baud);
+
+    debug("set BaudRate >> " + String::number(_baud));
+
+    if(!sendData(_data,1)){
+        debug("set BaudRate >> Unsuccess");
+        return -1;
+    }
+
+    return waitOK_ndb(_WAIT_OK_TIMEOUT, "setBaudRate");
+}
+
+void HM_UC20CLASS::closeSerial()
+{
+    if(serial_port->isOpen())
+        serial_port->close();
+    is_begin = false;
 }
 
 //private slot

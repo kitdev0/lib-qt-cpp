@@ -103,11 +103,12 @@ void SM_CLIENT_MQTT_API::slotMqttReceived(const QMQTT::Message & _message)
         }
     }
     else if(_topic.indexOf("status") != -1){
-//        String _id = _json_doc.object().value("id").toString();
+        String _id = _json_doc.object().value("id").toString();
 //        debug("topic >> " + _topic);
 ///        debug("payload >> " + _payload);
 //        debug("ID-"+_id + "=" +_json_doc.object().value("status").toString());
 //        returnMessage(_id,_MESSAGE_SUCCESS);
+//        debug("#1 >> id = " + _id);
         emit signalCheckStatusData(&_json_doc);
     }
 }
@@ -129,17 +130,17 @@ void SM_CLIENT_MQTT_API::slotCheckReportData(QJsonDocument *_json_doc)
         return;
     }
 
-    debug("table = " + _table);
+//    debug("table = " + _table);
 
     for(int i=0;i < _API_MAX;i++){
         String _value = _json_api.value(String::number(i)).toString();
         if(_value.length() > 0){
-            String _str = "api " + String::number(i) + " = " + _value;
+//            String _str = "api " + String::number(i) + " = " + _value;
             if(i < 10)
                 _json_object.insert("api0"+String::number(i),_value);
             else
                 _json_object.insert("api"+String::number(i),_value);
-            debug(_str);
+//            debug(_str);
         }
     }
 
@@ -167,19 +168,24 @@ void SM_CLIENT_MQTT_API::slotCheckStatusData(QJsonDocument *_json_doc)
 //    _str = "update status >> ";
 //    _str += "Status : " + _status;
 //    debug(_str);
+//    debug("#2");
 
     if(_id.size() > 0 && _status.size() > 0)
     {
         for(int i=0; i < client_no; i++){
             if(machine_status[i].id == _id){
+//                debug("#3");
                 _array = i;
                 break;
             }
         }
 
         if(_array == -1){
+            debug("client id >> Not found !!");
             return;
         }
+
+//        debug("#4");
 
         machine_status[_array].c_state = true;
         machine_status[_array].c_status = "ONLINE";
@@ -205,6 +211,7 @@ void SM_CLIENT_MQTT_API::slotCheckStatusData(QJsonDocument *_json_doc)
                 _flag_update = true;
             }
         }
+//        debug("#5");
         emit signalSetLEDClient(_LED_ON);
     }
     else
@@ -326,7 +333,7 @@ void SM_CLIENT_MQTT_API::returnMessage(String _id, String _message)
     _json_doc.setObject(_json_object);
 
     _data = _json_doc.toJson(QJsonDocument::Compact);
-    debug("return data >> " + _data);
+//    debug("return data >> " + _data);
 
     my_message.setId(999);
     my_message.setTopic("return");

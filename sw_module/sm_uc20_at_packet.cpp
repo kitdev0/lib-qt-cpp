@@ -52,11 +52,11 @@ bool SM_UC20_AT_PACKET_CLASS::getPacketNetworkRegis(void)	//CGREG?
                 debug(_str);
                 if (_state == 1) {
                     debug("<< Ready");
-                    return (gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT));
+                    return (gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT, "getPacketNetworkRegis-1"));
                 }
                 else {
                     debug("<< Not ready!!");
-                    gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT);
+                    gsmModule->waitOK_ndb(_WAIT_OK_TIMEOUT, "getPacketNetworkRegis-2");
                     return 0;
                 }
             }
