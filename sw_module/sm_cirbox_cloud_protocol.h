@@ -22,8 +22,8 @@
 #ifdef Q_OS_OSX
 #define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_SAY_ONLY
 #else
-#define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_SAY_ONLY
-//#define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_WRITE_ONLY
+//#define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_SAY_ONLY
+#define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_WRITE_ONLY
 //#define _CLOUD_BOX_PROTOCOL_DEBUG _DEBUG_SAY_AND_WRITE
 #endif
 
@@ -69,7 +69,8 @@ private:
 
     int16_t last_usb_err = -1;
     uint32_t cb_serial_baud;
-    int16_t last_mid_no = -1;
+    int16_t last_mid = -1;
+    int16_t current_mid = -2;
 
     void debug(QString data);
     void sendData(String _data);
@@ -78,6 +79,7 @@ private:
 signals:
     void signalReadCBProtocol(String);
     void signalReturnOK(void);
+    void signalReturnSuccess(void);
     void signalReturnError(void);
     void signalSetDataValue(String _str);
     void signalGetDataValue(String _str);
@@ -91,6 +93,7 @@ public slots:
 private slots:
     void slotReadSerialPort(void);
     void slotReadCBProtocol(String);
+    void slotReturnMID(int16_t _mid);
     void slotReturnOK(void);
     void slotReturnError(void);
     void slotGetDataValue(String _str);

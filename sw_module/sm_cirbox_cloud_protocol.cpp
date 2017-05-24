@@ -17,6 +17,7 @@ SM_CIRBOX_CLOUD_PROTOCOL::SM_CIRBOX_CLOUD_PROTOCOL(SM_CIRBOX_CLOUD_API *api_port
     connect(this,SIGNAL(signalReadCBProtocol(String)),this,SLOT(slotReadCBProtocol(String)));
     connect(this,SIGNAL(signalReturnError()),this,SLOT(slotReturnError()));
     connect(this,SIGNAL(signalReturnOK()),this,SLOT(slotReturnOK()));
+    connect(this,SIGNAL(signalReturnSuccess()),this,SLOT(slotReturnSuccess()));
     connect(this,SIGNAL(signalGetDataValue(String)),this,SLOT(slotGetDataValue(String)));
     connect(this,SIGNAL(signalSetDataValue(String)),this,SLOT(slotSetDataValue(String)));
     connect(check_comport_timer,SIGNAL(timeout()),this,SLOT(slotCheckComport()));
@@ -107,8 +108,9 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
             debug("Port name : " + _port_list[i]);
             debug("Open port >> passed");
             connect(cb_serial_port, SIGNAL(error(QSerialPort::SerialPortError)), this,SLOT(slotSerialError(QSerialPort::SerialPortError)));
-            connect(api,SIGNAL(signalResponseAPISuccess()),this,SLOT(slotReturnSuccess()));
-            connect(api,SIGNAL(signalResponseAPIUnsuccess()),this,SLOT(slotReturnUnsuccess()));
+//            last_mid_no = -1;
+//            connect(api,SIGNAL(signalResponseAPISuccess()),this,SLOT(slotReturnSuccess()));
+//            connect(api,SIGNAL(signalResponseAPIUnsuccess()),this,SLOT(slotReturnUnsuccess()));
             return true;
         }
         else{
@@ -138,15 +140,19 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadSerialPort(void)
     {
         String _str = cb_serial_port->readLine();
 //        debug("Read from client >> " + _str);
-        if(_str.indexOf("#")){
+        if(_str.indexOf('#') != -1){
             char index1 = _str.indexOf('#');
-            char index2 = _str.indexOf('C') - 1;
+            char index2 = _str.indexOf("CB+") - 1;
             String _cb_no =  _str.mid(index1 + 1, index2-index1);
-            debug("mid = " + _cb_no);
-            if(_cb_no.toInt() == last_mid_no)
-                return;
-            else
-                last_mid_no = _cb_no.toInt();
+            current_mid = _cb_no.toInt();
+//            if(_cb_no.toInt() == last_mid_no){
+////                debug("#123");
+//                return;
+//            }
+//            else{
+//                last_mid_no = _cb_no.toInt();
+//            debug("Receive mid = " + _cb_no);
+//            }
         }
 
         if(_str.indexOf("CB+") != -1){
@@ -184,25 +190,38 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadCBProtocol(String _str)
 //    debug(">> " + _str);
     if(_str.indexOf(cmd.UPDATE) != -1){
 //        debug("#CMD1");
-        if(api->reqUpdateAPIData())
-            emit signalReturnOK();
-        else
-            emit signalReturnError();
+        if(current_mid != last_mid){
+            api->reqUpdateAPIData();
+            last_mid = current_mid;
+//            debug("mid = " + String::number(last_mid));
+        }
+        slotReturnMID(current_mid);
     }
     else if(_str.indexOf(cmd.CLEAR) != -1){
 //        debug("#CMD2");
-        if(api->reqClrJsonAPIData())
-            emit signalReturnOK();
-        else
-            emit signalReturnError();
+        if(current_mid != last_mid){
+            api->reqClrJsonAPIData();
+            last_mid = current_mid;
+//            debug("mid = " + String::number(last_mid));
+        }
+        slotReturnMID(current_mid);
     }
     else if(_str.indexOf(cmd.SET) != -1){
 //        debug("#CMD3");
-        emit signalSetDataValue(_str);
+        if(current_mid != last_mid){
+            emit signalSetDataValue(_str);
+            last_mid = current_mid;
+//            debug("mid = " + String::number(last_mid));
+        }
+        slotReturnMID(current_mid);
+
     }
     else if(_str.indexOf(cmd.GET) != -1){
 //        debug("#CMD4");
-        emit signalGetDataValue(_str);
+        if(current_mid != last_mid){
+            emit signalGetDataValue(_str);
+            last_mid = current_mid;
+        }
     }
     else if(_str.indexOf(cmd.STATE) != -1){
 //        debug("# << cmd.STATE");
@@ -225,37 +244,48 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadCBProtocol(String _str)
     }
 }
 
+void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnMID(int16_t _mid)
+{
+//    debug("<< OK");
+    String _str = String::number(_mid,10) + "\r";
+    sendData(_str);
+}
+
 void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnOK()
 {
 //    debug("<< OK");
-    sendData("OK\r\n");
+    sendData("OK\r");
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnReady()
 {
 //    debug("<< OK");
-    sendData("READY\r\n");
+    sendData("READY\r");
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnBusy()
 {
 //    debug("<< OK");
-    sendData("BUSY\r\n");
+    sendData("BUSY\r");
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnError()
 {
-    sendData("ERROR\r\n");
+    sendData("ERROR\r");
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnSuccess()
 {
-    sendData("SUCCESS\r\n");
+//    debug("Return >> SUCCESS\r\n");
+//    sendData("SC\r\n");
+    String _str = "#\r";
+//    + String::number(last_mid_no,10) + "\r\n";
+    sendData(_str);
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotReturnUnsuccess()
 {
-    sendData("UNSUCCESS\r\n");
+    sendData("UNSUCCESS\r");
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotGetDataValue(String _str)
@@ -281,13 +311,13 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotSetDataValue(String _str)
 
     uint8_t _table_id = _table_no.toInt(&ok);
     if(_table_id > _TABLE_NO_MAX || !ok){
-        emit signalReturnError();
+//        emit signalReturnError();
         return;
     }
 
     uint8_t _api_id = _api_no.toInt(&ok);
     if(_api_id > _API_ID_MAX || !ok){
-        emit signalReturnError();
+//        emit signalReturnError();
         return;
     }
 
@@ -299,12 +329,14 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotSetDataValue(String _str)
 //    debug("api no. = " + _api_no);
 //    debug("value = " + _value);sudo
 
-    if(api->setAPIData(_table_no,"api" + _api_no,_value)){
-        emit signalReturnOK();
-    }
-    else{
-        emit signalReturnError();
-    }
+    api->setAPIData(_table_no,"api" + _api_no,_value);
+
+//    if(api->setAPIData(_table_no,"api" + _api_no,_value)){
+//        emit signalReturnSuccess();
+//    }
+//    else{
+//        emit signalReturnError();
+//    }
 }
 
 void SM_CIRBOX_CLOUD_PROTOCOL::slotCheckClientTimeout()
