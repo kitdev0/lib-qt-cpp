@@ -71,27 +71,64 @@ void SM_GSM_MODULE::debug(String data)
 void SM_GSM_MODULE::slotResetGsmModule()
 {
     debug("Reset GsmModule");
-//    if(flag_gsm_module_cannot_use)
-//        return;
 
-    for(int i=0; i < _TRY_TO_RESET_GSM_TIME; i++)
-    {
-        if(module->setPwrKey(_LOW))
-        {
-            if(slotInit())
-            {
-                flag_gsm_module_cannot_use = false;
-                emit signalSetLEDGsm(_LED_ON);
-                return;
+    for(int i=0; i < _TRY_TO_RESET_GSM_TIME; i++){
+//        if(module->setPwrKey(_LOW)){
+//            break;
+//        }
+        if (!module->setPwrKey(_HIGH)){
+            debug("Set power - Fail");
+            //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
+//            return 0;
+        }
+
+        if (!module->waitToReady(_WAIT_MODULE_RAEDY_TIME)) {
+            debug("Wait to gsm ready : Timeout");
+            emit signalTimeout();
+            if(!module->setURCPort(_URC_UART1)){
+                debug("Can't set URC Port !!");
             }
+            else{
+    //            debug("Set URC Port to UART1");
+            }
+            module->saveConfig();
+            //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
+//            return 0;
+        }
+        else{
+            break;
+        }
+    }
+
+    slotInit();
+}
+
+void SM_GSM_MODULE::slotResetNetwork()
+{
+    if(internet->resetConnecting()){
+        return;
+    }
+
+    slotInit();
+}
+
+void SM_GSM_MODULE::slotInit(void)
+{
+    for(int i = 0 ; i < 10; i++){
+        if(initModule()){
+            flag_gsm_module_cannot_use = false;
+            emit signalSetLEDGsm(_LED_ON);
+            return;
         }
     }
 
     emit signalSetLEDGsm(_LED_OFF);
     flag_gsm_module_cannot_use = true;
+
+    slotResetGsmModule();
 }
 
-bool SM_GSM_MODULE::slotInit(void)
+bool SM_GSM_MODULE::slotBegin()
 {
     if (!module->isBegin()){
         if(!module->begin(_BAUD_RATE_DEFINE)){
@@ -114,41 +151,27 @@ bool SM_GSM_MODULE::slotInit(void)
         module->saveConfig();
     }
 
+    slotResetGsmModule();
+    return 1;
+}
+
+bool SM_GSM_MODULE::initModule(void)
+{
+    uint8_t _cnt = 0;
+
+    debug("initModule");
+
     //read space
 //    debug("Space UFS = " + String::number(file->getFreeSpace(_UFS),10));
 //    debug("Space RAM = " + String::number(file->getFreeSpace(_RAM),10));
 
-#ifdef Q_OS_LINUX
-    if (!module->setPwrKey(_HIGH)){
-        debug("Set power - Fail");
-        //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
-        return 0;
-    }
-
-    if (!module->waitToReady(_WAIT_MODULE_RAEDY_TIME)) {
-        debug("Wait to gsm ready : Timeout");
-        emit signalTimeout();
-        if(!module->setURCPort(_URC_UART1)){
-            debug("Can't set URC Port !!");
-        }
-        else{
-//            debug("Set URC Port to UART1");
-        }
-        module->saveConfig();
-        //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
-        return 0;
-    }
-#endif
-
     if (!module->setEcho(_LOW)){
-        //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;
     }
 
     if (module->getURCPort() != _URC_UART1){
         if(!module->setURCPort(_URC_UART1)){
             debug("Can't set URC Port !!");
-            //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
             return 0;
         }
     }
@@ -156,7 +179,6 @@ bool SM_GSM_MODULE::slotInit(void)
 //    debug("#1");
     if (!sim->getSIMState()){
         debug("Sim - Not Ready!!");
-        //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;
     }
 
@@ -169,60 +191,73 @@ bool SM_GSM_MODULE::slotInit(void)
 //    debug("#3");
     if (!network->setOperator()){
         debug("Set Operator - Error!!");
-        //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;
     }
 
 //    debug("#4");
     if (!network->getNetworkRegis()){
         debug("Set NetworkRegis - Error!!");
-        //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;
     }
 
 //    debug("#5");
     if (network->getOperator() == ""){
         debug("Set getOperator - Error!!");
-        //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;
     }
 
 //    debug("#6");
     if (network->getSignalQuality() == 101){
         debug("getSignalQuality = 101");
-        //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;
     }
 
 //    debug("#7");
     if (!module->setPhoneFunc(4)){
         debug("setPhoneFunc(4) - Error!!");
-        //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;
     }
 
 //    debug("#8");
     if (!module->setPhoneFunc(1)){
         debug("setPhoneFunc(1) - Error!!");
-        //QTimer::singleShot(2000,this,SLOT(slotInit())); //try again
         return 0;
     }
 
 //    debug("#9");
-    flag_packet_network_is_regis = false;
-    packet_network_regis_timer.start();
-    slotSetPacketNetworkRegis();
+//    flag_packet_network_is_regis = false;
+//    slotSetPacketNetworkRegis();
 
-//    _timer.start();
-//    while (!packet->getNetworkRegis()) { //wait to packet network ready
-//        SM_DELAY::delay_ms(1000);
-//        if(_timer.elapsed() > 20000){
-//            debug("getNetworkRegis - Timeout!!");
-//            return 0;
-//        }
-//    }
-//    debug("wait time = " + String::number(_timer.elapsed()) + " [ms]");
-//    emit signalGetNetworkRegisOK();
+    while (!packet->getPacketNetworkRegis()) {
+        SM_DELAY::delay_ms(1000);
+        _cnt++;
+        if(_cnt > 60){
+            debug("Packet network regis. - Timeout!!");
+            return 0;
+        }
+    }
+
+    if(internet->isConnect()){
+        if(!internet->disConnect()){
+            debug("Set to disable internet - Timeout!!");
+            return 0;
+        }
+    }
+
+    if (!http->setContextid(1)){
+        debug("setContextid - Timeout!!");
+        return 0;
+    }
+
+    if (!internet->configure()){
+        debug("configure - Timeout!!");
+        return 0;
+    }
+
+    module_is_ready = true;
+    emit signalInternetIsOK();
+    emit signalSetLEDGsm(_LED_ON);
+
     return 1;
 }
 
@@ -231,7 +266,7 @@ void SM_GSM_MODULE::slotSetPacketNetworkRegis()
     if(!flag_packet_network_is_regis)
     {
         if(!packet->getPacketNetworkRegis()){
-            if(packet_network_regis_try_cnt < 25){
+            if(packet_network_regis_try_cnt < 50){
 //                debug("packet_network_regis_try_cnt = " + String::number(packet_network_regis_try_cnt));
                 QTimer::singleShot(2000,this,SLOT(slotSetPacketNetworkRegis())); //try again
                 packet_network_regis_try_cnt++;
@@ -241,27 +276,20 @@ void SM_GSM_MODULE::slotSetPacketNetworkRegis()
                 debug("Packet network regis. - Timeout!!");
                 emit signalTimeout();
                 debug("@12");
-                QTimer::singleShot(5000,this,SLOT(slotResetGsmModule()));
+                if(packet_network_regis_timeout_cnt < 10){
+                    QTimer::singleShot(5000,this,SLOT(slotInit_All()));
+                    packet_network_regis_timeout_cnt++;
+                }
             }
         }
         else{
             packet_network_regis_try_cnt = 0;
+            packet_network_regis_timeout_cnt = 0;
             flag_packet_network_is_regis = true;
 //            debug("Packet network regis. - wait time = " + String::number(packet_network_regis_timer.elapsed()) + " [ms]");
             emit signalPacketNetworkIsRegis();
         }
     }
-
-//    _timer.start();
-//    while (!packet->getNetworkRegis()) { //wait to packet network ready
-//        SM_DELAY::delay_ms(1000);
-//        if(_timer.elapsed() > 20000){
-//            debug("getNetworkRegis - Timeout!!");
-//            return 0;
-//        }
-//    }
-//    debug("wait time = " + String::number(_timer.elapsed()) + " [ms]");
-//    emit signalGetNetworkRegisOK();
 }
 
 void SM_GSM_MODULE::slotSetInternet(void)

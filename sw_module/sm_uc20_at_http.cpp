@@ -353,7 +353,7 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethod(bool _wait_flag)
                 return -1;
             }
         }
-        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT + 5000)){
+        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
             debug("getMethod >> Response timeout!!");
             return -2;
         }

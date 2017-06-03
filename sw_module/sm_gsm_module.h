@@ -41,7 +41,7 @@
 #endif
 
 #define _WAIT_MODULE_RAEDY_TIME 35000
-#define _TRY_TO_RESET_GSM_TIME  3
+#define _TRY_TO_RESET_GSM_TIME  5
 
 #ifndef _LED_ON
 #define _LED_ON     _LOW
@@ -83,14 +83,17 @@ private:
     SM_DEBUGCLASS *logDebug;
 #endif // _GSM_MODULE_DEBUG
 
-    QElapsedTimer packet_network_regis_timer;
+//    QElapsedTimer packet_network_regis_timer;
 
     bool flag_gsm_module_cannot_use = false;
     bool module_is_ready = false;
     bool flag_packet_network_is_regis = false;
     uint8_t packet_network_regis_try_cnt = 0;
+    uint8_t packet_network_regis_timeout_cnt = 0;
     uint8_t signal_quality = 0;
+    uint8_t try_to_init_modem_cnt = 0;
     void debug(String data);
+    bool initModule(void);
 
 signals:
     void signalInternetIsOK(void);
@@ -100,7 +103,9 @@ signals:
 
 public slots:
     void slotResetGsmModule();
-    bool slotInit();
+    void slotInit();
+    void slotResetNetwork();
+    bool slotBegin();
 private slots:
     void slotSetPacketNetworkRegis();
     void slotSetInternet();

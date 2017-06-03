@@ -166,7 +166,7 @@ String SM_UC20_AT_INTERNET_CLASS::getIP()
 {
 //    debug("get-IP");
     if(!gsmModule->sendData("AT+QIACT?",1))
-        return 0;
+        return "";
 	gsmModule->clrSerialBuffer();
 
 	while (1)
@@ -184,12 +184,12 @@ String SM_UC20_AT_INTERNET_CLASS::getIP()
             }
             else if (_str.indexOf("OK") != -1)
             {
-                debug("Check IP >> Internet disconnect!!");
+                debug("Get IP >> Internet not connect!!");
                 return "";
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_OK_TIMEOUT + 5000)){
-            debug("Check IP >> Response timeout!!");
+            debug("Get IP >> Response timeout!!");
             return "";
         }
 	}
@@ -199,9 +199,8 @@ bool SM_UC20_AT_INTERNET_CLASS::resetConnecting(void)
 {
     debug("Reset Connecting");
 
-    gsmModule->sendData("+++",1); // Exit from post method loob.
-
-    for(int i=0;i < 5;i++){
+    for(int i=0;i < 10;i++){
+        gsmModule->sendData("+++",1); // Exit from post method loob.
         if(disConnect())//Disconnect success
             return true;
     }
