@@ -37,8 +37,8 @@
 #endif
 #endif
 
-#define _WAIT_OK_TIMEOUT        1000
-#define _WAIT_RESPONSE_TIMEOUT	10000
+#define _WAIT_OK_TIMEOUT        5000
+#define _WAIT_RESPONSE_TIMEOUT	60000
 
 #define _PHONE_NUMERAL_NO 10
 
