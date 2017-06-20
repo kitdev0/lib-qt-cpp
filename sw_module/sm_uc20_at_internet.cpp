@@ -34,7 +34,7 @@ bool SM_UC20_AT_INTERNET_CLASS::configure(String _apn, String _user, String _pas
 {
 	String _str = "AT+QICSGP=1,1,";
     String _debug = "configure-APN >> ";
-	debug(_debug + "APN:" + _apn + " USER:" + _user + " PASS:" + _password);
+//	debug(_debug + "APN:" + _apn + " USER:" + _user + " PASS:" + _password);
 	_str += "\"" + _apn + "\",";
 	_str += "\"" + _user + "\",";
 	_str += "\"" + _password + "\",";
@@ -70,7 +70,7 @@ bool SM_UC20_AT_INTERNET_CLASS::configure(void)
     _str += "\"" + String(_USER) + "\",";
     _str += "\"" + String(_PASS) + "\",";
     _str += "1";
-	debug(_debug + _str);
+//	debug(_debug + _str);
     if(!gsmModule->sendData(_str,1))
         return 0;
     return(gsmModule->waitOK(_WAIT_OK_TIMEOUT, "configure-2"));
@@ -79,26 +79,19 @@ bool SM_UC20_AT_INTERNET_CLASS::configure(void)
 bool SM_UC20_AT_INTERNET_CLASS::connect(void)
 {
     QElapsedTimer _timer;
-//    debug("Set to open internet");
+    debug("Connecting to internet...");
     if(!gsmModule->sendData("AT+QIACT=1",1)){
-        debug("Set Connect internet >> Faile");
+//        debug("Set Connect internet >> Faile");
+        debug("!! Warning : Connecting >> Faile");
         return 0;
     }
     _timer.start();
-    if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000, "connect-1")){
-        debug("Set Connect internet >> OK");
-        debug("wait time : " + String::number(_timer.elapsed()));
+    if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000, "Connect")){
+        debug("Connecting >> OK [wait time = " + String::number(_timer.elapsed()) + "]");
         return 1;
 	}
     else{
-        _timer.start();
-        if (gsmModule->waitOK(_WAIT_OK_TIMEOUT+5000, "connect-2")){
-            debug("Set Connect internet >> OK");
-            debug("wait time : " + String::number(_timer.elapsed()));
-            return 1;
-        }
-        debug("Set Connect internet >> Faile!!");
-//        emit signalResetGsmModule();
+//        debug("Set Connect internet >> Faile!!");
         return 0;
     }
 }
@@ -123,13 +116,13 @@ bool SM_UC20_AT_INTERNET_CLASS::disConnect()
 
 bool SM_UC20_AT_INTERNET_CLASS::isConnect(void)
 {
-//    debug("Check Connecting");
+//    debug("Internet is connecting?");
     if(getIP().length()){
-//        debug("CONNECTING...");
+//        debug(">> Connected");
         return 1;
     }
     else{
-//        debug("DISCONNECT");
+//        debug(">> Don't connect");
         return 0;
     }
 //    if(!gsmModule->sendData("AT+QIACT?",1))
@@ -184,12 +177,12 @@ String SM_UC20_AT_INTERNET_CLASS::getIP()
             }
             else if (_str.indexOf("OK") != -1)
             {
-                debug("Get IP >> Internet not connect!!");
+//                debug("!! Warning : Internet not connect");
                 return "";
             }
         }
         else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_OK_TIMEOUT + 5000)){
-            debug("Get IP >> Response timeout!!");
+            debug("Check IP >> Response timeout!!");
             return "";
         }
 	}
@@ -200,7 +193,7 @@ bool SM_UC20_AT_INTERNET_CLASS::resetConnecting(void)
     debug("Reset Connecting");
 
     for(int i=0;i < 10;i++){
-        gsmModule->sendData("+++",1); // Exit from post method loob.
+//        gsmModule->sendData("+++",1); // Exit from post method loob.
         if(disConnect())//Disconnect success
             return true;
     }

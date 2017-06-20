@@ -39,8 +39,9 @@
 //
 #define _CB_CMD_TRUP "TRUP"
 
-#define _CLIENT_TIMEOUT_TIME 60000
-#define _CHECK_COMPORT_TIMER 5000
+#define _CLIENT_TIMEOUT_TIME        15000
+#define _CHECK_COMPORT_TIMER        2000
+#define _MACHINE_OFFLINE_TIMER_CNT  60000
 
 class SM_CIRBOX_CLOUD_PROTOCOL : public QObject
 {
@@ -60,13 +61,16 @@ private:
     QSerialPort *cb_serial_port;
     QTimer *client_online_time;
     QTimer *check_comport_timer;
+    QTimer *client_offline_timer_cnt;
 
     bool is_begin = false;
     bool flag_client_is_connected = false;
     bool flag_first_scanning = true;
     bool flag_first_serial_not_found = true;
+    bool flag_warning_machine_debug = false;
     int8_t machine_client_connect_ok = -1;
 
+    uint8_t client_timeout_cnt = 0;
     int16_t last_usb_err = -1;
     uint32_t cb_serial_baud;
     int16_t last_mid = -1;
@@ -105,6 +109,7 @@ private slots:
     void slotReturnReady();
     void slotReturnBusy();
     void slotSerialError(QSerialPort::SerialPortError _error);
+    void slotUpdateClientOffline();
 };
 
 #endif // SM_CIRBOX_CLOUD_PROTOCOL_H

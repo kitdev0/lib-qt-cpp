@@ -54,13 +54,13 @@
 #define _HTTP_STATUS_TEMPORARY_REDIRECT 307
 
 //Http status : Client Error 4xx
-#define _HTTP_STATUS_BAD_REQUEST        400
-#define _HTTP_STATUS_UNAUTHURIZED       401
-#define _HTTP_STATUS_PAYMENT_REQUIRED   402
-#define _HTTP_STATUS_FORBIDDEN          403
-#define _HTTP_STATUS_NOT_FOUND          404
-#define _HTTP_STATUS_METHOD_NOT_ALLOWED 405
-#define _HTTP_STATUS_NOT_ACCEPTABLE     406
+#define _HTTP_STATUS_BAD_REQUEST                    400
+#define _HTTP_STATUS_UNAUTHURIZED                   401
+#define _HTTP_STATUS_PAYMENT_REQUIRED               402
+#define _HTTP_STATUS_FORBIDDEN                      403
+#define _HTTP_STATUS_NOT_FOUND                      404
+#define _HTTP_STATUS_METHOD_NOT_ALLOWED             405
+#define _HTTP_STATUS_NOT_ACCEPTABLE                 406
 #define _HTTP_STATUS_PROXY_AUTHENTICATION_REQUIRED  407
 #define _HTTP_STATUS_REQUEST_TIMEOUT                408
 #define _HTTP_STATUS_CONFLICT                       409
@@ -81,6 +81,14 @@
 #define _HTTP_STATUS_GATEWAY_TIMEOUT                504
 #define _HTTP_STATUS_VERSION_NOT_SUPPORTED          505
 
+
+#define _POST_INPUT_TIME        80
+#define _POST_RESPONSE_TIME     120
+#define _GET_RESPONSE_TIME      80
+#define _READ_RESPONSE_TIME     80
+#define _URL_INPUT_TIME         60
+
+#define _DATA_POST_MAX_SIZE     1020000
 
 class SM_UC20_AT_HTTP_CLASS
 {
@@ -104,7 +112,7 @@ public:
 	bool flag_response_data_is_ok = false;
 	bool flag_read_method_connect = false;
 	bool flag_read_method_error = false;
-	//bool flag_gsm_module_is_ready = true;
+	//bool flag_gsm_internet_is_ready = true;
 
     int16_t server_response_value;
 
@@ -129,7 +137,8 @@ public:
 
 	String readMethod(bool _wait_flag);
 	String response_data;
-
+    int16_t getMethodCustomHeader(String *_header, uint16_t _data_size, uint16_t _input_time_sec);
+    int16_t postMethodCustomHeader(String *_header, QFile *_file, uint16_t _input_time, uint16_t _response_time);
 private:
 #ifdef _UC20_HTTP_DEBUG
     SM_DEBUGCLASS *logDebug;
@@ -139,6 +148,8 @@ private:
     String URL_BUFF;
     QElapsedTimer timeout;
     void debug(String data);
+    void myTimeoutReset();
+    bool myTimeoutCheck(uint64_t _time);
 };
 
 

@@ -2,6 +2,8 @@
 
 bool flag_connect = false;
 
+QElapsedTimer my_timer;
+
 SM_UC20_AT_HTTP_CLASS::SM_UC20_AT_HTTP_CLASS(HM_UC20CLASS* _module)
 {
 #ifdef _UC20_HTTP_DEBUG
@@ -158,12 +160,12 @@ bool SM_UC20_AT_HTTP_CLASS::setRequestHeader(bool _value)
     String _data = "AT+QHTTPCFG=\"requestheader\",";
     String _debug = "set Request-Header >> ";
 	if (_value) {
-		debug(_debug + "1");
+//		debug(_debug + "1");
         if(!gsmModule->sendData(_data + "1" ,1))
             return 0;
 	}
 	else {
-		debug(_debug + "0");
+//		debug(_debug + "0");
         if(!gsmModule->sendData(_data + "0",1))
             return 0;
 	}
@@ -193,12 +195,14 @@ bool SM_UC20_AT_HTTP_CLASS::setURL(String _url)
 {
     String _data = "AT+QHTTPURL=";
     String _debug = "setURL - utl >> ";
+    uint8_t _cnt = 0;
 //	debug(_debug + _url);
 
     _data += String::number(_url.length(),10);
-    _data += ",80";
+    _data += ",";
+    _data += String::number(_URL_INPUT_TIME,10);
 
-//  debug("#set url >> " + _data);
+//    debug("#set url >> " + _url);
 
     if(!gsmModule->sendData(_data,1))
         return 0;
@@ -216,14 +220,21 @@ bool SM_UC20_AT_HTTP_CLASS::setURL(String _url)
             }
             else if (_str.indexOf("ERROR") != -1)
             {
-                debug("<< " + _str);
+                debug("ERROR >> " + _str);
                 return 0;
             }
         }
-        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("setURL-1 >> Response timeout!!");
-            return 0;
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_URL_INPUT_TIME + 10)){
+                debug("setURL-1 >> Response timeout!!");
+                return 0;
+            }
         }
+//        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
+//            debug("setURL-1 >> Response timeout!!");
+//            return 0;
+//        }
 	}
 
     if(!gsmModule->sendData(_url,1))
@@ -236,13 +247,15 @@ bool SM_UC20_AT_HTTP_CLASS::setURL(String _url, bool _wait_flag)
 {
     String _data = "AT+QHTTPURL=";
     String _debug = "setURL - utl >> ";
+    uint8_t _cnt = 0;
 //	debug(_debug + _url);
 	URL_BUFF = _url;
 
     _data += String::number(_url.length(),10);
-    _data += ",80";
+    _data += ",";
+    _data += String::number(_URL_INPUT_TIME,10);
 
-//  debug("#set url >> " + _data);
+//    debug("#set url >> " + _url);
 
     if(!gsmModule->sendData(_data,1))
         return 0;
@@ -266,10 +279,17 @@ bool SM_UC20_AT_HTTP_CLASS::setURL(String _url, bool _wait_flag)
                 return false;
             }
         }
-        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("setURL-2 >> Response timeout!!");
-            return 0;
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_URL_INPUT_TIME + 10)){
+                debug("setURL-2 >> Response timeout!!");
+                return 0;
+            }
         }
+//        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
+//            debug("setURL-2 >> Response timeout!!");
+//            return 0;
+//        }
 	}
 	return false;
 }
@@ -329,19 +349,73 @@ bool SM_UC20_AT_HTTP_CLASS::saveResponseToMemory(FILE_PATTERN_t pattern, String 
 
 }
 
-int16_t SM_UC20_AT_HTTP_CLASS::getMethod(bool _wait_flag)
+int16_t SM_UC20_AT_HTTP_CLASS::getMethodCustomHeader(String *_header, uint16_t _data_size, uint16_t _input_time_sec)
 {
 //    debug("getMethod");
-    if(!gsmModule->sendData("AT+QHTTPGET=80",1))
-        return 0;
-	flag_get_method = true;
+    uint16_t _cnt = 0;
+    String _get = "";
 
-	while (_wait_flag)
-	{
+//	debug(_debug + _data);
+
+    _get += "AT+QHTTPGET=";
+    _get += String::number(_GET_RESPONSE_TIME);
+    _get += ",";
+    _get += String::number(_data_size);
+    _get += ",";
+    _get += String::number(_input_time_sec);
+
+
+    if(!gsmModule->sendData(_get,1))
+        return 0;
+
+//    if(!gsmModule->sendData("AT+QHTTPGET=80",1))
+//        return 0;
+
+    flag_get_method = true;
+
+//    myTimeoutReset();
+
+    while (1)
+    {
         if(gsmModule->serial_port->canReadLine())
         {
             String _data = gsmModule->serial_port->readLine();
-            //debug("read data >> " + _str);
+//            debug("read data >> " + _data);
+            if (_data.indexOf("CONNECT") != -1)
+            {
+//                debug("CONNECTED");
+                break;
+            }
+            else if (_data.indexOf("ERROR") != -1)
+            {
+                debug("ERROR >> " + _data);
+                return -1;
+            }
+        }
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_GET_RESPONSE_TIME + 10)){
+                debug("getMethod-1 >> Response timeout!!");
+                return -2;
+            }
+        }
+//        else if(myTimeoutCheck((_GET_RESPONSE_TIME * 1000) + 10000)){
+//            debug("getMethod >> Response timeout!!");
+//            return -2;
+//        }
+    }
+
+    if(!gsmModule->sendData(*_header,1))
+        return 0;
+
+    _cnt = 0;
+
+    while (1)
+    {
+        if(gsmModule->serial_port->canReadLine())
+        {
+            String _data = gsmModule->serial_port->readLine();
+//            debug("read data >> " + _data);
             if (_data.indexOf("+QHTTPGET:") != -1)
             {
                 char index1 = _data.indexOf(",");
@@ -353,10 +427,71 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethod(bool _wait_flag)
                 return -1;
             }
         }
-        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("getMethod >> Response timeout!!");
-            return -2;
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_input_time_sec + 10)){
+                debug("getMethod-2 >> Response timeout!!");
+                return -2;
+            }
         }
+//        else if(myTimeoutCheck((_GET_RESPONSE_TIME * 1000) + 10000)){
+//            debug("getMethod >> Response timeout!!");
+//            return -2;
+//        }
+    }
+    return 0;
+}
+
+int16_t SM_UC20_AT_HTTP_CLASS::getMethod(bool _wait_flag)
+{
+//    debug("getMethod");
+    uint16_t _cnt = 0;
+    String _get = "";
+
+//	debug(_debug + _data);
+
+    _get += "AT+QHTTPGET=";
+    _get += String::number(_GET_RESPONSE_TIME);
+
+
+    if(!gsmModule->sendData(_get,1))
+        return 0;
+
+//    if(!gsmModule->sendData("AT+QHTTPGET=80",1))
+//        return 0;
+
+	flag_get_method = true;
+
+//    myTimeoutReset();
+
+	while (_wait_flag)
+	{
+        if(gsmModule->serial_port->canReadLine())
+        {
+            String _data = gsmModule->serial_port->readLine();
+//            debug("read data >> " + _data);
+            if (_data.indexOf("+QHTTPGET:") != -1)
+            {
+                char index1 = _data.indexOf(",");
+                return(_data.mid(index1 + 1, 4).toInt());
+            }
+            else if (_data.indexOf("ERROR") != -1)
+            {
+                debug("ERROR >> " + _data);
+                return -1;
+            }
+        }
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_GET_RESPONSE_TIME + 10)){
+                debug("getMethod >> Response timeout!!");
+                return -2;
+            }
+        }
+//        else if(myTimeoutCheck((_GET_RESPONSE_TIME * 1000) + 10000)){
+//            debug("getMethod >> Response timeout!!");
+//            return -2;
+//        }
 	}
 	return 0;
 }
@@ -364,12 +499,15 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethod(bool _wait_flag)
 String SM_UC20_AT_HTTP_CLASS::readMethod(bool _wait_flag)
 {
 	bool _flag_connect = false;
+    uint16_t _cnt = 0;
 //    debug("readMethod");
 
     if(!gsmModule->sendData("AT+QHTTPREAD=80",1))
         return 0;
 
 	flag_read_method = true;
+
+//    myTimeoutReset();
 
 	while (_wait_flag)
 	{
@@ -388,16 +526,26 @@ String SM_UC20_AT_HTTP_CLASS::readMethod(bool _wait_flag)
                 return response_data;
             }
             else if (_data.indexOf("+CME ERROR :") != -1) {
-                debug("readAPI-ERROR!!");
-                return "";
+                debug("readAPI-ERROR >> " + _data);
+                return "-1";
             }
         }
-        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("readMethod >> Response timeout!!");
-            return "";
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_READ_RESPONSE_TIME + 10)){
+                debug("readMethod >> Response timeout!!");
+                gsmModule->serial_port->clear();
+                gsmModule->serial_port->clearError();
+                debug("Serial error = " + gsmModule->serial_port->errorString());
+                return "-2";
+            }
         }
+//        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
+//            debug("readMethod >> Response timeout!!");
+//            return "";
+//        }
 	}
-	return "";
+    return "0";
 }
 
 int16_t SM_UC20_AT_HTTP_CLASS::postMethod()
@@ -409,18 +557,25 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod()
 int16_t SM_UC20_AT_HTTP_CLASS::postMethod(String *_data)
 {
 	String _post = "";
-    String _debug = "post >> ";
+//    String _debug = "post >> ";
+    uint16_t _cnt = 0;
 
 //	debug(_debug + _data);
 
     _post += "AT+QHTTPPOST=";
     _post += String::number(_data->length(),10);
-    _post += ",80,80";
+    _post += ",";
+    _post += String::number(_POST_INPUT_TIME);
+    _post += ",";
+    _post += String::number(_POST_RESPONSE_TIME);
 
-//    debug("#set port >> " + _post);
+//    debug("# data port >> ");
+//    debug(*_data);
 
     if(!gsmModule->sendData(_post,1))
         return 0;
+
+//    myTimeoutReset();
 
 	while (1)
 	{
@@ -439,14 +594,24 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(String *_data)
                 return -1;
             }
         }
-        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("postMethod-1 >> Response timeout!!");
-            return -2;
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_POST_RESPONSE_TIME + 10)){
+                debug("postMethod-1 >> Response timeout!!");
+                return -2;
+            }
         }
+//        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
+//            debug("postMethod-1 >> Response timeout!!");
+//            return -2;
+//        }
 	}
 	
     if(!gsmModule->sendData(*_data,1))
         return 0;
+
+//    myTimeoutReset();
+    _cnt = 0;
 
 	while (1)
 	{
@@ -457,7 +622,7 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(String *_data)
             if (_str.indexOf("+QHTTPPOST") != -1)
             {
                 char index1 = _str.indexOf(",");
-                //debug(" >> " + _str);
+                debug(" >> " + _str);
                 return(_str.mid(index1 + 1, 3).toInt());
             }
             else if (_str.indexOf("ERROR") != -1)
@@ -466,16 +631,24 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(String *_data)
                 return -1;
             }
         }
-        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("postMethod-2 >> Response timeout!!");
-            return -2;
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_POST_RESPONSE_TIME + 10)){
+                debug("postMethod-2  >> Response timeout!!");
+                return -2;
+            }
         }
+//        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
+//            debug("postMethod-2 >> Response timeout!!");
+//            return -2;
+//        }
 	}
 }
 
 int16_t SM_UC20_AT_HTTP_CLASS::postMethod(QFile *_file, uint16_t _input_time, uint16_t _response_time)
 {
 
+    uint16_t _cnt = 0;
     if(!_file->exists()){
         debug("File not found!!");
         return 0;
@@ -496,6 +669,10 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(QFile *_file, uint16_t _input_time, ui
 
 //	debug(_debug + _data);
 
+    if(_my_data.length() > 1024000 || _my_data.length() == 0){
+        _my_data = "!! Log-file over size !!";
+    }
+
     _post += "AT+QHTTPPOST=";
     _post += String::number(_my_data.length(),10);
     _post += "," + String::number(_input_time,10);
@@ -506,6 +683,8 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(QFile *_file, uint16_t _input_time, ui
 
     if(!gsmModule->sendData(_post,1))
         return 0;
+
+//    myTimeoutReset();
 
     while (1)
     {
@@ -524,23 +703,33 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(QFile *_file, uint16_t _input_time, ui
                 return -1;
             }
         }
-        else if(!gsmModule->serial_port->waitForReadyRead(_WAIT_RESPONSE_TIMEOUT)){
-            debug("#1 postLogFile >> Response timeout!!");
-            return -2;
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_response_time + 10)){
+                debug("#1 postLogFile  >> Response timeout!!");
+                return -2;
+            }
         }
+//        else if(!gsmModule->serial_port->waitForReadyRead(_response_time + 30000)){
+//            debug("#1 postLogFile >> Response timeout!!");
+//            return -2;
+//        }
     }
 
 //    QByteArray _my_data;
 
 //    while(!_file->atEnd()){
 //        _my_data = _file->readAll();
-        gsmModule->sendDataByte(_my_data,false);
+    gsmModule->sendDataByte(_my_data,false);
 //        gsmModule->sendDataByte("+++",true);
 //    }
 
 //    _file->close();
 //    debug(_my_data);
 //    timeout.start();
+
+//    myTimeoutReset();
+    _cnt = 0;
 
     while (1)
     {
@@ -551,7 +740,6 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(QFile *_file, uint16_t _input_time, ui
             if (_str.indexOf("+QHTTPPOST") != -1)
             {
                 char index1 = _str.indexOf(",");
-                debug("Post Log >> Success");
                 return(_str.mid(index1 + 1, 3).toInt());
             }
             else if (_str.indexOf("ERROR") != -1)
@@ -561,10 +749,144 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(QFile *_file, uint16_t _input_time, ui
             }
 //            timeout.start();
         }
-        else if(!gsmModule->serial_port->waitForReadyRead(30000)){
-            debug("#2 postLogFile >> Response timeout!!");
-            return -2;
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_response_time + 10)){
+                debug("#2 postLogFile  >> Response timeout!!");
+                return -2;
+            }
         }
+//        else if(!gsmModule->serial_port->waitForReadyRead(_response_time + 30000)){
+//            debug("#2 postLogFile >> Response timeout!!");
+//            return -2;
+//        }
+
+//        if(timeout.elapsed() > (180000)){
+//            debug("#2 postLogFile >> Response timeout!!");
+//            debug("timeout = " + String::number(timeout.elapsed()));
+//            return -2;
+//        }
+    }
+}
+
+int16_t SM_UC20_AT_HTTP_CLASS::postMethodCustomHeader(String *_header, QFile *_file, uint16_t _input_time, uint16_t _response_time)
+{
+
+    uint16_t _cnt = 0;
+    String _data = "";
+    if(!_file->exists()){
+        debug("File not found!!");
+        return 0;
+    }
+    if(!_file->open(QIODevice::ReadOnly)){
+        debug("File can't open!!");
+        return 0;
+    }
+
+    _data = _file->readAll();
+//    _my_data = "Hi I'm Mr. Kiiitsak";
+
+    _file->close();
+
+    String _post = "";
+//    String _debug = "post >> ";
+
+    if(_data.length() == 0){
+        _data = "!! Log-file empty!!";
+    }
+    else if(_data.length() > _DATA_POST_MAX_SIZE){
+        _data = "!! Log-file over size !!";
+    }
+
+    _data = *_header + _data;
+
+    _post += "AT+QHTTPPOST=";
+    _post += String::number(_data.length(),10);
+    _post += "," + String::number(_input_time,10);
+    _post += "," + String::number(_response_time,10);
+//    _post += ",80,80";
+
+//    debug("#set port >> " + _post);
+
+    if(!gsmModule->sendData(_post,1))
+        return 0;
+
+//    myTimeoutReset();
+
+    while (1)
+    {
+        if(gsmModule->serial_port->canReadLine())
+        {
+            String _str = gsmModule->serial_port->readLine();
+            //debug("read data >> " + _str);
+            if (_str.indexOf("CONNECT") != -1)
+            {
+//                debug("CONNECTED");
+                break;
+            }
+            else if (_str.indexOf("ERROR") != -1)
+            {
+                debug("Post Log >> ERROR1 : " + _str);
+                return -1;
+            }
+        }
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_response_time + 10)){
+                debug("#1 postLogFile  >> Response timeout!!");
+                return -2;
+            }
+        }
+//        else if(!gsmModule->serial_port->waitForReadyRead(_response_time + 30000)){
+//            debug("#1 postLogFile >> Response timeout!!");
+//            return -2;
+//        }
+    }
+
+//    QByteArray _my_data;
+
+//    while(!_file->atEnd()){
+//        _my_data = _file->readAll();
+    gsmModule->sendData(_data,false);
+//        gsmModule->sendDataByte("+++",true);
+//    }
+
+//    _file->close();
+//    debug(_my_data);
+//    timeout.start();
+
+//    myTimeoutReset();
+    _cnt = 0;
+
+    while (1)
+    {
+        if(gsmModule->serial_port->canReadLine())
+        {
+            String _str = gsmModule->serial_port->readLine();
+//            debug("read data >> " + _str);
+            if (_str.indexOf("+QHTTPPOST") != -1)
+            {
+                char index1 = _str.indexOf(",");
+                return(_str.mid(index1 + 1, 3).toInt());
+            }
+            else if (_str.indexOf("ERROR") != -1)
+            {
+                debug("Post Log >> ERROR2 : " + _str);
+                return -1;
+            }
+//            timeout.start();
+        }
+        else if(!gsmModule->serial_port->waitForReadyRead(1000)){
+            _cnt++;
+            if(_cnt > (_response_time + 10)){
+                debug("#2 postLogFile  >> Response timeout!!");
+                return -2;
+            }
+        }
+//        else if(!gsmModule->serial_port->waitForReadyRead(_response_time + 30000)){
+//            debug("#2 postLogFile >> Response timeout!!");
+//            return -2;
+//        }
 
 //        if(timeout.elapsed() > (180000)){
 //            debug("#2 postLogFile >> Response timeout!!");
@@ -577,6 +899,20 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(QFile *_file, uint16_t _input_time, ui
 void SM_UC20_AT_HTTP_CLASS::timeoutStart(void)
 {
 	gsmModule->timeoutStart();
+}
+
+void SM_UC20_AT_HTTP_CLASS::myTimeoutReset(void)
+{
+    my_timer.start();
+}
+
+bool SM_UC20_AT_HTTP_CLASS::myTimeoutCheck(uint64_t _time)
+{
+    if (my_timer.elapsed() > _time)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 

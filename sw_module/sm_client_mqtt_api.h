@@ -5,8 +5,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include "../../../../lib-qt-cpp/qmqtt/qmqtt.h"
-#include "../../../../lib-qt-cpp/sw_module/sm_debug.h"
+#include "../../../../../lib-qt-cpp/qmqtt/qmqtt.h"
+#include "../../../../../lib-qt-cpp/sw_module/sm_debug.h"
 #include "sm_cirbox_cloud_api.h"
 
 

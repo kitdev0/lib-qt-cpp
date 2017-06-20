@@ -72,11 +72,14 @@ public:
     SM_UC20_AT_FTP_CLASS *ftp = new SM_UC20_AT_FTP_CLASS(&uc20_module);
 
 //    bool init(void);
-    inline bool moduleIsReady(void){return module_is_ready;}
-    inline bool moduleCannotUse(void){return flag_gsm_module_cannot_use;}
+    inline bool internetIsReady(void){return internet_is_ready;}
+//    inline bool moduleCannotUse(void){return flag_gsm_module_cannot_use;}
     inline bool packetNetworkIsRegis(void){return flag_packet_network_is_regis;}
 
-private:    
+    bool begin();
+    bool initModule();
+    void setPwrOffModule();
+private:
     HM_UC20CLASS uc20_module;
 
 #ifdef _GSM_MODULE_DEBUG
@@ -85,30 +88,39 @@ private:
 
 //    QElapsedTimer packet_network_regis_timer;
 
-    bool flag_gsm_module_cannot_use = false;
-    bool module_is_ready = false;
+//    bool flag_gsm_module_cannot_use = false;
+    bool internet_is_ready = false;
     bool flag_packet_network_is_regis = false;
-    uint8_t packet_network_regis_try_cnt = 0;
-    uint8_t packet_network_regis_timeout_cnt = 0;
     uint8_t signal_quality = 0;
-    uint8_t try_to_init_modem_cnt = 0;
+//    uint8_t try_to_init_modem_cnt = 0;
+    uint8_t try_to_begin_module = 0;
+    uint8_t try_to_init_module = 0;
+    uint8_t try_to_packet_network_regis = 0;
+    uint8_t try_to_init_internet = 0;
+    uint8_t try_to_connect_internet = 0;
+    uint8_t try_to_set_pwr_unsuccess = 0;
+    uint8_t try_to_set_pwr_off = 0;
     void debug(String data);
-    bool initModule(void);
 
 signals:
     void signalInternetIsOK(void);
     void signalSetLEDGsm(bool _state);
     void signalPacketNetworkIsRegis();
     void signalTimeout();
+    void signalModuleIsBeginSuccess();
+    void signalModuleIsInitSuccess();
+//    void signalResetNetworkIsOk();
 
 public slots:
-    void slotResetGsmModule();
-    void slotInit();
-    void slotResetNetwork();
-    bool slotBegin();
-private slots:
+//    void slotResetGsmModule();
+//    void slotResetNetwork();
+    void slotTryToSetPwrOFF();
+    void slotBegin();
+    void slotInitModule();
     void slotSetPacketNetworkRegis();
-    void slotSetInternet();
+    void slotInitInternet();
+    void slotConnectInternet();
+private slots:
 };
 
 #endif // SM_GSM_MODULE_H

@@ -27,6 +27,7 @@ void SM_UC20_AT_FTP_CLASS::debug(String data)
     logDebug->sayAndWriteLog(data);
 #endif
 #endif
+    data = "";
 }
 
 bool SM_UC20_AT_FTP_CLASS::setContextid(int8_t _context_ID)

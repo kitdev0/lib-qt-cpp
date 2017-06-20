@@ -38,7 +38,8 @@
 #endif
 
 #define _WAIT_OK_TIMEOUT        5000
-#define _WAIT_RESPONSE_TIMEOUT	60000
+#define _WAIT_RESPONSE_TIMEOUT      30000
+#define _WAIT_MODULE_RETURN_TIMEOUT	10000
 
 #define _PHONE_NUMERAL_NO 10
 
@@ -177,6 +178,8 @@ public:
     int32_t getBaudRate();
     bool setBaudRate(int32_t _baud);
     void closeSerial();
+    bool setCmdPwrOff();
+    bool setFlowDTR_OFF();
 private:
 #ifdef _UC20_DEBUG
     SM_DEBUGCLASS *logDebug;
@@ -203,6 +206,7 @@ signals:
 private slots:
     void slotReadyRead();
 
+    void slotSerialError(QSerialPort::SerialPortError _error);
 };
 
 #endif // HM_UC20CLASS_H
