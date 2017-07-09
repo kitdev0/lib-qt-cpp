@@ -43,6 +43,8 @@
 #define _CHECK_COMPORT_TIMER        2000
 #define _MACHINE_OFFLINE_TIMER_CNT  60000
 
+#define _WRITE_TIMEOUT  30000
+
 class SM_CIRBOX_CLOUD_PROTOCOL : public QObject
 {
     Q_OBJECT

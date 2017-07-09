@@ -55,8 +55,12 @@ void SM_CIRBOX_CLOUD_PROTOCOL::sendData(String _data)
 {
     QByteArray _byte = _data.toUtf8();
     cb_serial_port->write(_byte.constData(),_byte.length());
-    if(cb_serial_port->bytesToWrite() > 0)
-        cb_serial_port->flush();
+    if(cb_serial_port->waitForBytesWritten(_WRITE_TIMEOUT)){
+        return;
+    }
+    debug("!!Warning : Write Timeout");
+//    if(cb_serial_port->bytesToWrite() > 0)
+//        cb_serial_port->flush();
 }
 
 bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
@@ -77,7 +81,7 @@ bool SM_CIRBOX_CLOUD_PROTOCOL::tryToConnect(void)
         }
 #else
 #ifdef Q_OS_LINUX
-        if(info.portName().indexOf(String(_RPI_USB_SERIAL_PORT_DEVICE)) != -1  || info.portName().indexOf(String(_RPI_ARDUINO_SERIAL_PORT_DEVICE)) != -1)
+        if(info.portName().indexOf(String(_RPI_ARDUINO_SERIAL_PORT_DEVICE)) != -1)
         {
 //            debug(info.portName());
             _port_list << info.portName();
@@ -243,6 +247,10 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadCBProtocol(String _str)
     }
     else if(_str.indexOf(cmd.STATE) != -1){
 //        debug("# << cmd.STATE");
+        if(api->flagCmdResetBoard()){
+            sendData("RESET\r");
+            return;
+        }
         if(!flag_client_is_connected){
             flag_client_is_connected = true;
             emit signalClientISConnect();
@@ -251,6 +259,10 @@ void SM_CIRBOX_CLOUD_PROTOCOL::slotReadCBProtocol(String _str)
     }
     else if(_str.indexOf(cmd.READY) != -1){
 //        debug("# << cmd.READY");
+        if(api->flagCmdResetBoard()){
+            sendData("RESET\r");
+            return;
+        }
         if(api->getConnectServerReady()){
 //            debug("# << CloudBox Ready");
             slotReturnReady();
