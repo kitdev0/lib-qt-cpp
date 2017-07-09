@@ -374,7 +374,7 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethodCustomHeader(String *_header, uint16_t _
     flag_get_method = true;
 
 //    myTimeoutReset();
-
+//    debug("#D1");
     while (1)
     {
         if(gsmModule->serial_port->canReadLine())
@@ -405,10 +405,14 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethodCustomHeader(String *_header, uint16_t _
 //        }
     }
 
+//    debug("#D2");
+
     if(!gsmModule->sendData(*_header,1))
         return 0;
 
     _cnt = 0;
+
+//    debug("#D3");
 
     while (1)
     {
@@ -534,9 +538,10 @@ String SM_UC20_AT_HTTP_CLASS::readMethod(bool _wait_flag)
             _cnt++;
             if(_cnt > (_READ_RESPONSE_TIME + 10)){
                 debug("readMethod >> Response timeout!!");
+                debug("Serial error = " + gsmModule->serial_port->errorString());
                 gsmModule->serial_port->clear();
                 gsmModule->serial_port->clearError();
-                debug("Serial error = " + gsmModule->serial_port->errorString());
+                debug("Serial error after clear = " + gsmModule->serial_port->errorString());
                 return "-2";
             }
         }
