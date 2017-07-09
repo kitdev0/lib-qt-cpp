@@ -96,7 +96,12 @@ void SM_CLIENT_MQTT_API::slotMqttReceived(const QMQTT::Message & _message)
 //        debug("topic >> " + _topic);
         if(_mid != last_mid){
             if(_mid != -1){
-                returnMessage(_id,_MESSAGE_SUCCESS);
+                if(flag_reset_mahine){
+                    flag_reset_mahine = false;
+                    returnMessage(_id,_MESSAGE_RESET);
+                }
+                else
+                    returnMessage(_id,_MESSAGE_SUCCESS);
                 emit signalCheckReportData(&_json_doc);
             }
             last_mid = _mid;
@@ -104,6 +109,10 @@ void SM_CLIENT_MQTT_API::slotMqttReceived(const QMQTT::Message & _message)
     }
     else if(_topic.indexOf("status") != -1){
         String _id = _json_doc.object().value("id").toString();
+        if(flag_reset_mahine){
+            flag_reset_mahine = false;
+            returnMessage(_id,_MESSAGE_RESET);
+        }
 //        debug("topic >> " + _topic);
 ///        debug("payload >> " + _payload);
 //        debug("ID-"+_id + "=" +_json_doc.object().value("status").toString());
@@ -306,6 +315,12 @@ void SM_CLIENT_MQTT_API::slotStartTryToConnectBroker()
     try_to_connect_broker_timer->start(_TRY_TO_CONNECT_BROKER);
 }
 
+void SM_CLIENT_MQTT_API::slotResetMachine()
+{
+    debug("Reset Machine");
+    flag_reset_mahine = true;
+}
+
 //private
 void SM_CLIENT_MQTT_API::debug(String data)
 {
@@ -333,7 +348,7 @@ void SM_CLIENT_MQTT_API::returnMessage(String _id, String _message)
     _json_doc.setObject(_json_object);
 
     _data = _json_doc.toJson(QJsonDocument::Compact);
-//    debug("return data >> " + _data);
+    debug("return data >> " + _data);
 
     my_message.setId(999);
     my_message.setTopic("return");

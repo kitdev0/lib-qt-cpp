@@ -5,8 +5,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include "../../../../../lib-qt-cpp/qmqtt/qmqtt.h"
-#include "../../../../../lib-qt-cpp/sw_module/sm_debug.h"
+#include "/Users/kitdev/Google Drive/CirboxDesign/lib-qt-cpp/qmqtt/qmqtt.h"
+#include "/Users/kitdev/Google Drive/CirboxDesign/lib-qt-cpp/sw_module/sm_debug.h"
 #include "sm_cirbox_cloud_api.h"
 
 
@@ -37,6 +37,7 @@
 #define _API_MAX 99
 #define _CLIENT_NO_MAX  32
 
+#define _MESSAGE_RESET          "reset"
 #define _MESSAGE_SUCCESS        "success"
 #define _MESSAGE_UNSUCCESS      "unsuccess"
 
@@ -71,7 +72,7 @@ signals:
     void signalReportDataToCloud(QJsonDocument *_json_doc);
     void signalSetLEDClient(bool _state);
 public slots:
-
+    void slotResetMachine();
 private:
     SM_DEBUGCLASS *logDebug;
     QMQTT::Client *mqttClient;
@@ -87,7 +88,7 @@ private:
     };
 
     machine_t machine_status[_CLIENT_NO_MAX];
-
+    bool flag_reset_mahine = false;
     uint8_t client_no = 0;
     int16_t last_mid = -1;
     void debug(String data);
