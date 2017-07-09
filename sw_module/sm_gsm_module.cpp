@@ -209,22 +209,52 @@ void SM_GSM_MODULE::setPwrOffModule()
 //slot
 void SM_GSM_MODULE::slotTryToSetPwrOFF()
 {
-    debug("## Try to Set Power >> OFF : [" + String::number(try_to_set_pwr_off) + "]");
+    debug("## Try to Set Power >> OFF : [" + String::number(try_to_set_pwr_unsuccess) + "]");
     module->clrSerialBuffer();
 
-    if(!module->setCmdPwrOff()){
+    module->setPwrOff();
+    SM_DELAY::delay_ms(5000);
+    module->setPwrOn();
+
+    module->setPwrKey(_HIGH);
+
+    SM_DELAY::delay_sec(10);
+
+    if(!module->waitToReady(_WAIT_MODULE_RAEDY_TIME)){
         if(try_to_set_pwr_unsuccess < 5){
             try_to_set_pwr_unsuccess++;
             QTimer::singleShot(5000,this,SLOT(slotTryToSetPwrOFF()));
         }
         else{
-            QTimer::singleShot(15*60000,this,SLOT(slotTryToSetPwrOFF()));
+            //add clear buffer 21/06/2017
+            module->closeSerial();
+            QTimer::singleShot(5000,this,SLOT(slotBegin()));
+            try_to_set_pwr_unsuccess = 0;
+//            QTimer::singleShot(15*60000,this,SLOT(slotTryToSetPwrOFF()));
         }
     }
     else{
         try_to_set_pwr_unsuccess = 0;
         QTimer::singleShot(10000,this,SLOT(slotBegin()));
     }
+
+//    if(!module->setCmdPwrOff()){
+//        if(try_to_set_pwr_unsuccess < 5){
+//            try_to_set_pwr_unsuccess++;
+//            QTimer::singleShot(5000,this,SLOT(slotTryToSetPwrOFF()));
+//        }
+//        else{
+//            //add clear buffer 21/06/2017
+//            module->closeSerial();
+//            QTimer::singleShot(5000,this,SLOT(slotBegin()));
+//            try_to_set_pwr_unsuccess = 0;
+////            QTimer::singleShot(15*60000,this,SLOT(slotTryToSetPwrOFF()));
+//        }
+//    }
+//    else{
+//        try_to_set_pwr_unsuccess = 0;
+//        QTimer::singleShot(10000,this,SLOT(slotBegin()));
+//    }
 }
 
 void SM_GSM_MODULE::slotBegin()
@@ -239,7 +269,7 @@ void SM_GSM_MODULE::slotBegin()
 //        debug("begin_gsm_module_cnt++");
 //        debug("try_to_begin_module = " + String::number(try_to_begin_module));
         try_to_begin_module++;
-        if(try_to_begin_module > 10){
+        if(try_to_begin_module > 5){
             try_to_begin_module = 0;
             setPwrOffModule();
         }
