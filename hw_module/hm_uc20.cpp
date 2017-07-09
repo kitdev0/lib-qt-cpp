@@ -46,9 +46,10 @@ void HM_UC20CLASS::timeoutReset(void)
 
 void HM_UC20CLASS::setPwrKeyPinActive(void)
 {
-    gpio.digitalWrite(pwr_key,_LOW);
+    debug("setPwrKeyPinActive");
+    gpio.digitalWrite(_GSM_PWK_PIN,_LOW);
     SM_DELAY::delay_ms(2000);
-    gpio.digitalWrite(pwr_key,_HIGH);
+    gpio.digitalWrite(_GSM_PWK_PIN,_HIGH);
 }
 
 bool HM_UC20CLASS::timeoutCheck(uint32_t _time)
@@ -203,28 +204,36 @@ bool HM_UC20CLASS::connectModule(void)
 void HM_UC20CLASS::serialSend(QByteArray _byte, bool _flag_ln)
 {
     serial_port->write(_byte.constData(),_byte.length());
-    if(_flag_ln)
+    if(_flag_ln){
         serial_port->write("\r\n");
-    if(serial_port->bytesToWrite() > 0)
+    }
+
+    if(serial_port->waitForBytesWritten(_WRITE_TIMEOUT)){
         serial_port->flush();
+        return;
+    }
+
+    debug("!!Warning : Write Timeout");
+//    if(serial_port->bytesToWrite() > 0)
+//        serial_port->flush();
 }
 //protected
 
 
 //public
-bool HM_UC20CLASS::begin(uint32_t _baud, uint16_t _pwr_pin)
+bool HM_UC20CLASS::begin(uint32_t _baud)
 {
     debug("Open port...");
     serial_baud = _baud;
 
 //#ifdef Q_OS_LINUX
-//    if(!_pwr_pin != pwr_key ){
-//        gpio.pinExport(pwr_key);
-//        gpio.pinMode(pwr_key, _OUTPUT);
-//        gpio.digitalWrite(pwr_key,_LOW);
+//    if(!_pwr_pin != _GSM_PWK_PIN ){
+//        gpio.pinExport(_GSM_PWK_PIN);
+//        gpio.pinMode(_GSM_PWK_PIN, _OUTPUT);
+//        gpio.digitalWrite(_GSM_PWK_PIN,_LOW);
 //    }
 //#endif
-//    pwr_key = _pwr_pin;
+//    _GSM_PWK_PIN = _pwr_pin;
 
     if(connectModule()){
         is_begin = true;
@@ -234,11 +243,6 @@ bool HM_UC20CLASS::begin(uint32_t _baud, uint16_t _pwr_pin)
         is_begin = false;
         return 0;
     }
-}
-
-bool HM_UC20CLASS::begin(uint32_t _baud)
-{
-    return begin(_baud,_GSM_PWK_PIN);
 }
 
 bool HM_UC20CLASS::dataAvailable(void)
@@ -319,15 +323,12 @@ String HM_UC20CLASS::receiveStringUntil(String _data)
     return "";
 }
 
-void HM_UC20CLASS::setPwrKeyPin(uint16_t _pin)
+void HM_UC20CLASS::setPwrKeyPin()
 {
-    debug("set Pwr-Pin >> " + String(_pin));
-    if(is_begin)
-        gpio.pinUnExport(pwr_key);
-    pwr_key = _pin;
-    gpio.pinExport(pwr_key);
-    gpio.pinMode(pwr_key, _OUTPUT);
-    gpio.digitalWrite(pwr_key, _LOW);
+    debug("set PwrKey Pin >> " + String::number(_GSM_PWK_PIN));
+    gpio.pinExport(_GSM_PWK_PIN);
+    gpio.pinMode(_GSM_PWK_PIN, _OUTPUT);
+    gpio.digitalWrite(_GSM_PWK_PIN, _LOW);
 }
 
 bool HM_UC20CLASS::setPwrKey(bool _value)
@@ -348,7 +349,7 @@ bool HM_UC20CLASS::setPwrKey(bool _value)
 //			debug(_str);
             if (_str.indexOf("RDY") != -1)
 			{
-//                debug("Power-ON");
+                debug("Power-ON");
                 if (_value == _HIGH) {
 					_flag = true;
 					break;
@@ -358,7 +359,7 @@ bool HM_UC20CLASS::setPwrKey(bool _value)
 			}
             else if (_str.indexOf("POWERED DOWN") != -1)
 			{
-//                debug("Power-OFF");
+                debug("Power-OFF");
                 if (_value == _LOW) {
 					_flag = true;
 					break;
@@ -385,28 +386,24 @@ bool HM_UC20CLASS::setPwrKey(bool _value)
     return _flag;
 }
 
+void HM_UC20CLASS::setPwrPin()
+{
+    debug("set Power Pin >> " + String::number(_GSM_PWR_PIN));
+    gpio.pinExport(_GSM_PWR_PIN);
+    gpio.pinMode(_GSM_PWR_PIN, _OUTPUT);
+    gpio.digitalWrite(_GSM_PWR_PIN,_LOW);
+}
+
 void HM_UC20CLASS::setPwrOn()
 {
-    uint16_t _pwr_pin = _GSM_PWR_PIN;
     debug("set Power >> On");
-    if(flag_power_pin_is_export)
-        gpio.pinUnExport(_pwr_pin);
-    gpio.pinExport(_pwr_pin);
-    gpio.pinMode(_pwr_pin, _OUTPUT);
-    gpio.digitalWrite(_pwr_pin,_HIGH);
-    flag_power_pin_is_export = true;
+    gpio.digitalWrite(_GSM_PWR_PIN,_LOW);
 }
 
 void HM_UC20CLASS::setPwrOff()
 {
-    uint16_t _pwr_pin = _GSM_PWR_PIN;
     debug("set Power >> Off");
-    if(flag_power_pin_is_export)
-        gpio.pinUnExport(_pwr_pin);
-    gpio.pinExport(_pwr_pin);
-    gpio.pinMode(_pwr_pin, _OUTPUT);
-    gpio.digitalWrite(_pwr_pin,_LOW);
-    flag_power_pin_is_export = true;
+    gpio.digitalWrite(_GSM_PWR_PIN,_HIGH);
 }
 
 bool HM_UC20CLASS::waitToReady(uint32_t _wait_time)
@@ -724,8 +721,13 @@ bool HM_UC20CLASS::setBaudRate(int32_t _baud)
 void HM_UC20CLASS::closeSerial()
 {
     debug(">> Close serial port");
-    if(serial_port->isOpen())
+    if(serial_port->isOpen()){
+        serial_port->clearError();
+        serial_port->clear();
         serial_port->close();
+    }
+
+    delete serial_port;
     is_begin = false;
 }
 
@@ -749,6 +751,10 @@ void HM_UC20CLASS::slotReadyRead(void)
 
 void HM_UC20CLASS::slotSerialError(QSerialPort::SerialPortError _error)
 {
+    if(_error == QSerialPort::TimeoutError){
+        return;
+    }
+
     switch (_error)
     {
 //    case QSerialPort::NoError:
@@ -790,9 +796,9 @@ void HM_UC20CLASS::slotSerialError(QSerialPort::SerialPortError _error)
     case QSerialPort::UnknownError:
         debug("Seria port >> UnknownError");
         break;
-    case QSerialPort::TimeoutError:
-        debug("Seria port >> TimeoutError");
-        break;
+//    case QSerialPort::TimeoutError:
+//        debug("Seria port >> TimeoutError");
+//        break;
     default:
         debug("Seria port >> ErrorNotDefine");
         break;

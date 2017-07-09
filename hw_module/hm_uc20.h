@@ -114,6 +114,8 @@
 #define _GSM_PWR_PIN    110
 #endif
 
+#define _WRITE_TIMEOUT  30000
+
 enum FILE_PATTERN_t
 {
     _UFS,
@@ -147,7 +149,7 @@ public:
 
     inline bool isBegin(void) {return is_begin;}
     inline bool isConnected(void) {return is_connected;}
-    void setPwrKeyPin(uint16_t _pin);
+    void setPwrKeyPin(void);
     void timeoutStart(void);
     void timeoutReset(void);
     void clrSerialBuffer(void);
@@ -158,7 +160,6 @@ public:
     bool sendDataByte(QByteArray _byte, bool _flag_ln);
     String receiveStringUntil(String _data);
     String receiveStringUntil(char _data);
-    bool begin(uint32_t _baud, uint16_t _pwr_pin);
     bool begin(uint32_t _baud);
     bool waitOK(uint32_t _time, String _str);
     bool waitOK_ndb(uint32_t _time, String _str);
@@ -180,6 +181,9 @@ public:
     void closeSerial();
     bool setCmdPwrOff();
     bool setFlowDTR_OFF();
+    void setPwrKeyPinActive(void);
+    void setInitPwrKeyPin();
+    void setPwrPin();
 private:
 #ifdef _UC20_DEBUG
     SM_DEBUGCLASS *logDebug;
@@ -193,7 +197,6 @@ private:
     uint16_t pwr_key = 0;
 
     void debug(QString data);
-    void setPwrKeyPinActive(void);
     bool simpleCommand(void);
     bool tryToConnect(void);
     bool connectToGSMPort(void);
