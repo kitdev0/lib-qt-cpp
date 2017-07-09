@@ -91,7 +91,7 @@ void SM_CIRBOX_CLOUD_API::checkToExecuteCmd(uint8_t _cmd)
 {
     switch (_cmd)
     {
-    case 1://shutdown
+    case _CMD_SHUTDOWN://shutdown
         debug("!! Shutdown !!");
         emit signalOffLEDAll();
         flag_set_led_off_all = true;
@@ -100,7 +100,7 @@ void SM_CIRBOX_CLOUD_API::checkToExecuteCmd(uint8_t _cmd)
         connect_server_ready = false;
         STATIC_BOOL_WAIT_TO_REBOOT = true;
         break;
-    case 2://reboot
+    case _CMD_REBOOT://reboot
         debug("!! Reboot !!");
         emit signalOffLEDAll();
         flag_set_led_off_all = true;
@@ -109,7 +109,7 @@ void SM_CIRBOX_CLOUD_API::checkToExecuteCmd(uint8_t _cmd)
         connect_server_ready = false;
         STATIC_BOOL_WAIT_TO_REBOOT = true;
         break;
-    case 3://get log
+    case _CMD_GET_LOG://get log
 //        debug("Req - Logfile");
         if(date_get_log.size() > 0){
             debug("!! Get Log !!");
@@ -129,6 +129,10 @@ void SM_CIRBOX_CLOUD_API::checkToExecuteCmd(uint8_t _cmd)
 //        QTimer::singleShot(5000,this,SLOT(slotCloudBoxReboot()));
 //        STATIC_BOOL_WAIT_TO_REBOOT = true;
         break;
+    case _CMD_RESET_MACHINE:
+        flag_cmd_reset_board = true;
+        emit signalResetMachine();
+        break;
     default:
         debug("!! CMD Not found !!");
         break;
@@ -144,7 +148,7 @@ void SM_CIRBOX_CLOUD_API::configSystem(QString _service_id)
         if(_service_id == _SERVICE_SC){ //Single Client
 //            debug("Set system to Single Client");
 
-            slotCreatRunAppScript(_SERVICE_SC);
+//            slotCreatRunAppScript(_SERVICE_SC);
 
             String _command = "sudo update-rc.d mosquitto disable";
             system(_command.toStdString().c_str());
@@ -156,7 +160,7 @@ void SM_CIRBOX_CLOUD_API::configSystem(QString _service_id)
         if(_service_id == _SERVICE_MC){ //Multi Client
 //            debug("Set system to Multi Client");
 
-            slotCreatRunAppScript(_SERVICE_MC);
+//            slotCreatRunAppScript(_SERVICE_MC);
 
             String _command = "sudo update-rc.d mosquitto enable";
             system(_command.toStdString().c_str());
@@ -355,7 +359,7 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPI(void)
             date_get_log = responseCmdData(&_json_response);
         QString _response_id = responseDeviceID(&_json_response);
 
-        if(_response_status == _HTTP_STATUS_OK)
+        if(_response_status == _HTTP_STATUS_OK || _response_status == _HTTP_STATUS_ACCEPTED)
         {
             response_api_incorrect_cnt = 0;
             flag_api_response_incorrect = false;
@@ -402,6 +406,7 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPIClientPing()
 
     if(_api == "-1"){//Error
         try_to_read_response++;
+        debug("try_to_read_response = " + String(try_to_read_response));
         if(try_to_read_response < 3){
             QTimer::singleShot(3000,this,SLOT(slotReadResponseAPI()));
             return;
@@ -684,10 +689,13 @@ void SM_CIRBOX_CLOUD_API::slotAppLoop()
             debug("Synctime >> Unsuccess");
         }
         QTimer::singleShot(_APP_LOOP_TIME,this,SLOT(slotAppLoop()));
+        return;
     }
 
     if(flag_to_ping){
 //        debug("## Client ping...");
+        flag_to_ping = false;
+        resetPingTime();
         if(!clientPing()){
             try_to_client_ping++;
             debug("!! Warning : Client ping >> Unsuccess [" + String::number(try_to_client_ping) + "]");
@@ -696,14 +704,13 @@ void SM_CIRBOX_CLOUD_API::slotAppLoop()
                 emit signalTryToInitModule(try_client_ping_cnt++);
             }else{
                 ethernet->internet->disConnect();
+//                debug("#A");
                 QTimer::singleShot(_APP_LOOP_TIME + 5000,this,SLOT(slotAppLoop()));
             }
             emit signalSetLEDServer(_LED_OFF);
             return;
         }
 //        debug(" >> Success");
-        flag_to_ping = false;
-        resetPingTime();
         QTimer::singleShot(_APP_LOOP_TIME,this,SLOT(slotAppLoop()));
         return;
     }
@@ -818,12 +825,20 @@ void SM_CIRBOX_CLOUD_API::setMachineType(QString _machine_type)
     machine_type = _machine_type;
 }
 
+bool SM_CIRBOX_CLOUD_API::flagCmdResetBoard()
+{
+   bool _flag = flag_cmd_reset_board;
+   flag_cmd_reset_board = false;
+   return _flag;
+}
+
 bool SM_CIRBOX_CLOUD_API::syncTime(String _gmt,bool _flag_sync_again)
 {
     uint8_t _loop_try_read = 0;
     debug("## getTimeZone ##");
 
     if(!_flag_sync_again && flag_synctime_success){
+        debug("flag_synctime_success = 1");
         return 1;
     }
 
@@ -1242,14 +1257,15 @@ bool SM_CIRBOX_CLOUD_API::clientPing(void)
             return 0;
         }
     }
-
+//    debug("#A");
     if(!ethernet->http->setURL(String(_CIRBOX_CLOUD_URL) + _url)){
         return 0;
     }
+//    debug("#B");
     if(ethernet->http->getMethodCustomHeader(&_header,_header.length(),80) < 0){
         return 0;
     }
-
+//    debug("#C");
     flag_wait_to_read_response = true;
     QTimer::singleShot(_READ_METHOD_DELAY_TIME,this,SLOT(slotReadResponseAPIClientPing()));
     return 1;

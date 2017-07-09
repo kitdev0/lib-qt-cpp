@@ -1,7 +1,7 @@
 #ifndef SM_CIRBOX_CLOUD_API_H
 #define SM_CIRBOX_CLOUD_API_H
 
-#define _FIRMWARE_VERSION 3.03
+#define _FIRMWARE_VERSION 3.22
 
 #include <QObject>
 #include <QTimer>
@@ -66,7 +66,8 @@
 
 #define _MIN_TO_MSEC(min) min*60*1000
 
-#define _CLIENT_PING_PULLING_TIME _MIN_TO_MSEC(0.5) //(Min.)
+#define _CLIENT_PING_PULLING_TIME _MIN_TO_MSEC(2) //(Min.)
+//#define _CLIENT_PING_PULLING_TIME 20000 //(Sec)
 
 #define _CCID_LEN_MAX   32
 
@@ -79,6 +80,12 @@
 #define _TRY_TO_SET_URL     5
 #define _TRY_TO_GET_METHOD  5
 #define _APP_LOOP_TIME      2000
+
+#define _CMD_SHUTDOWN       1
+#define _CMD_REBOOT         2
+#define _CMD_GET_LOG        3
+#define _CMD_UPDATE_FW      4
+#define _CMD_RESET_MACHINE  5
 
 class SM_CIRBOX_CLOUD_API : public QObject
 {
@@ -101,6 +108,8 @@ public:
     inline bool getConnectServerReady(){return connect_server_ready;}
     void configSystem(QString _machine_type);
     void setMachineType(QString _machine_type);
+    bool flagCmdResetBoard();
+
 public slots:
     void slotReqUpdateAPI(QJsonDocument *_json_report);
     void slotCreatRunAppScript(QString _service_id);
@@ -122,6 +131,8 @@ private:
 
     bool flag_deactiveted = false;
     bool flag_api_response_incorrect = false;
+
+    bool flag_cmd_reset_board = false;
 
     uint8_t last_api_url_set = 0;
     uint8_t try_to_slot_synctime_cnt = 0;
@@ -185,6 +196,7 @@ signals:
 //    void signalResetClientTimeoutTime();
     void signalResetInternet();
     void signalTryToInitModule(uint8_t);
+    void signalResetMachine();
 
 private slots:
 //    void slotStartToCheckAPIBuff(void);
