@@ -100,6 +100,7 @@ private:
     uint8_t try_to_connect_internet = 0;
     uint8_t try_to_set_pwr_unsuccess = 0;
     uint8_t try_to_set_pwr_off = 0;
+    uint8_t connect_internet_false_cnt = 0;
     void debug(String data);
 
 signals:

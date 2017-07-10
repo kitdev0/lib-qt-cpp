@@ -387,7 +387,14 @@ void SM_GSM_MODULE::slotConnectInternet()
 
     if(try_to_connect_internet > 5){
         try_to_connect_internet = 0;
-        QTimer::singleShot(30000,this,SLOT(slotInitModule())); //try again
+        debug("## connect_internet_false_cnt [" + String::number(connect_internet_false_cnt) + "]");
+        connect_internet_false_cnt++;
+        if(connect_internet_false_cnt > 2){
+            connect_internet_false_cnt = 0;
+            setPwrOffModule();
+        }
+        else
+            QTimer::singleShot(30000,this,SLOT(slotInitModule())); //try again
         return;
     }
 
@@ -399,6 +406,7 @@ void SM_GSM_MODULE::slotConnectInternet()
         }
     }
 
+    connect_internet_false_cnt = 0;
     try_to_connect_internet = 0;
     internet_is_ready = true;
     emit signalInternetIsOK();

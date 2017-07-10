@@ -1,7 +1,7 @@
 #ifndef SM_CIRBOX_CLOUD_API_H
 #define SM_CIRBOX_CLOUD_API_H
 
-#define _FIRMWARE_VERSION 3.22
+#define _FIRMWARE_VERSION 3.31
 
 #include <QObject>
 #include <QTimer>
