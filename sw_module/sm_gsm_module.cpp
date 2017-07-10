@@ -291,7 +291,7 @@ void SM_GSM_MODULE::slotInitModule()
     else{
 //        debug("try_to_init_module = " + String::number(try_to_init_module));
         try_to_init_module++;
-        if(try_to_init_module > 10){
+        if(try_to_init_module > 5){
             try_to_init_module = 0;
             setPwrOffModule();
         }
