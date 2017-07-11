@@ -389,6 +389,7 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethodCustomHeader(String *_header, uint16_t _
             else if (_data.indexOf("ERROR") != -1)
             {
                 debug("ERROR >> " + _data);
+                debug("get Set >> " + _get);
                 return -1;
             }
         }
@@ -396,6 +397,7 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethodCustomHeader(String *_header, uint16_t _
             _cnt++;
             if(_cnt > (_GET_RESPONSE_TIME + 10)){
                 debug("getMethod-1 >> Response timeout!!");
+                debug("get Set >> " + _get);
                 return -2;
             }
         }
@@ -428,6 +430,8 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethodCustomHeader(String *_header, uint16_t _
             else if (_data.indexOf("ERROR") != -1)
             {
                 debug("ERROR >> " + _data);
+                debug("get Set >> " + _get);
+                debug("get Body >> " + *_header);
                 return -1;
             }
         }
@@ -435,6 +439,8 @@ int16_t SM_UC20_AT_HTTP_CLASS::getMethodCustomHeader(String *_header, uint16_t _
             _cnt++;
             if(_cnt > (_input_time_sec + 10)){
                 debug("getMethod-2 >> Response timeout!!");
+                debug("get Set >> " + _get);
+                debug("get Body >> " + *_header);
                 return -2;
             }
         }
@@ -596,6 +602,7 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(String *_data)
             else if (_str.indexOf("ERROR") != -1)
             {
                 debug("ERROR1 : " + _str);
+                debug("Post Set >> " + _post);
                 return -1;
             }
         }
@@ -603,6 +610,7 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(String *_data)
             _cnt++;
             if(_cnt > (_POST_RESPONSE_TIME + 10)){
                 debug("postMethod-1 >> Response timeout!!");
+                debug("Post Set >> " + _post);
                 return -2;
             }
         }
@@ -633,6 +641,8 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(String *_data)
             else if (_str.indexOf("ERROR") != -1)
             {
                 debug("ERROR2 : " + _str);
+                debug("Post Set >> " + _post);
+                debug("Post Body >> " + *_data);
                 return -1;
             }
         }
@@ -640,6 +650,8 @@ int16_t SM_UC20_AT_HTTP_CLASS::postMethod(String *_data)
             _cnt++;
             if(_cnt > (_POST_RESPONSE_TIME + 10)){
                 debug("postMethod-2  >> Response timeout!!");
+                debug("Post Set >> " + _post);
+                debug("Post Body >> " + *_data);
                 return -2;
             }
         }

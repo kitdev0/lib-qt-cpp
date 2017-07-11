@@ -187,6 +187,7 @@ private:
     bool postLog(String _str);
     void resetPingTime();
     void responseAPIIncorrect();
+    bool setDisInternet();
 signals:
 //    void signalResponseAPISuccess();
 //    void signalResponseAPIUnsuccess();

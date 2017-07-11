@@ -467,9 +467,13 @@ void SM_CIRBOX_CLOUD_API::slotReadResponseAPIClientPing()
 
 void SM_CIRBOX_CLOUD_API::slotTryToInitModule(uint8_t _try_cnt)
 {
-    ethernet->internet->disConnect();
+//    ethernet->internet->disConnect();
     emit signalSetLEDServer(_LED_OFF);
     connect_server_ready = false;
+    if(!setDisInternet()){
+        QTimer::singleShot(5000,ethernet,SLOT(slotTryToSetPwrOFF()));
+        return;
+    }
 
     if(_try_cnt < 2){
         QTimer::singleShot(2000,ethernet,SLOT(slotInitModule()));
@@ -614,8 +618,11 @@ void SM_CIRBOX_CLOUD_API::slotAppLoop()
                     emit signalTryToInitModule(try_post_report_cnt++);
                 }
                 else{
-                    ethernet->internet->disConnect();
-                    QTimer::singleShot(_APP_LOOP_TIME + 5000,this,SLOT(slotAppLoop()));
+                    if(setDisInternet())
+                        QTimer::singleShot(_APP_LOOP_TIME + 5000,this,SLOT(slotAppLoop()));
+                    else
+                        QTimer::singleShot(5000,ethernet,SLOT(slotTryToSetPwrOFF()));
+
                 }
                 emit signalSetLEDServer(_LED_OFF);
                 return;
@@ -639,9 +646,16 @@ void SM_CIRBOX_CLOUD_API::slotAppLoop()
 //        debug("## Post Log [Unsuccess Info.] ##");
         if(!postLog(post_log_error_info)){
             debug("Post Log [Unsuccess Info.] >> Unsuccess");
-            ethernet->internet->disConnect();
+//            ethernet->internet->disConnect();
+            if(setDisInternet()){
+                QTimer::singleShot(_APP_LOOP_TIME + 5000,this,SLOT(slotAppLoop()));
+            }
+            else{
+                post_log_error_info = "";
+                flag_post_log_unsuccess = false;
+                QTimer::singleShot(5000,ethernet,SLOT(slotTryToSetPwrOFF()));
+            }
             emit signalSetLEDServer(_LED_OFF);
-            QTimer::singleShot(_APP_LOOP_TIME + 5000,this,SLOT(slotAppLoop()));
             return;
         }
         debug("Post Log [Unsuccess Info.] >> Success");
@@ -668,8 +682,11 @@ void SM_CIRBOX_CLOUD_API::slotAppLoop()
             debug("Post Log >> Unsuccess");
             flag_post_log_unsuccess = true;
             if(_value == 0){//post log timeout
-                ethernet->internet->disConnect();
-                QTimer::singleShot(_APP_LOOP_TIME + 5000,this,SLOT(slotAppLoop()));
+//                ethernet->internet->disConnect();
+                if(setDisInternet())
+                    QTimer::singleShot(_APP_LOOP_TIME + 5000,this,SLOT(slotAppLoop()));
+                else
+                    QTimer::singleShot(5000,ethernet,SLOT(slotTryToSetPwrOFF()));
                 emit signalSetLEDServer(_LED_OFF);
             }
             else{//data is incorrect
@@ -703,9 +720,10 @@ void SM_CIRBOX_CLOUD_API::slotAppLoop()
                 try_to_client_ping = 0;
                 emit signalTryToInitModule(try_client_ping_cnt++);
             }else{
-                ethernet->internet->disConnect();
-//                debug("#A");
-                QTimer::singleShot(_APP_LOOP_TIME + 5000,this,SLOT(slotAppLoop()));
+                if(setDisInternet())
+                    QTimer::singleShot(_APP_LOOP_TIME + 5000,this,SLOT(slotAppLoop()));
+                else
+                    QTimer::singleShot(5000,ethernet,SLOT(slotTryToSetPwrOFF()));
             }
             emit signalSetLEDServer(_LED_OFF);
             return;
@@ -1587,5 +1605,19 @@ bool SM_CIRBOX_CLOUD_API::postLog(String _str)
 void SM_CIRBOX_CLOUD_API::resetPingTime()
 {
     client_ping_pulling_timer->start(_CLIENT_PING_PULLING_TIME);
+}
+
+bool SM_CIRBOX_CLOUD_API::setDisInternet()
+{
+    debug("setDisInternet");
+    for(int i=0; i < 5;i++){
+        if(ethernet->internet->disConnect()){
+//            connect_server_ready = true;
+            return true;
+        }
+        SM_DELAY::delay_ms(2000);
+    }
+    connect_server_ready = false;
+    return false;
 }
 
