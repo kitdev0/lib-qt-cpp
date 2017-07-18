@@ -143,7 +143,7 @@ void SM_CIRBOX_CLOUD_API::configSystem(QString _service_id)
 {
     if(_service_id == _SERVICE_SC || _service_id == _SERVICE_MC)
     {
-        cmdRemove_interfaceFile();
+//        cmdRemove_interfaceFile();
 
         if(_service_id == _SERVICE_SC){ //Single Client
 //            debug("Set system to Single Client");
