@@ -94,8 +94,14 @@ void SM_CLIENT_MQTT_API::slotMqttReceived(const QMQTT::Message & _message)
             return;
         }
 //        debug("topic >> " + _topic);
-        if(_mid != last_mid){
-            if(_mid != -1){
+
+//        if(_mid != last_mid ){
+//            if(_mid != -1){
+//      update 05/09/2017
+        if(_mid != last_mid || _id != last_id){
+            last_mid = _mid;
+            last_id = _id;
+            if(_mid > -1){
                 if(flag_reset_mahine){
                     flag_reset_mahine = false;
                     returnMessage(_id,_MESSAGE_RESET);
@@ -104,7 +110,6 @@ void SM_CLIENT_MQTT_API::slotMqttReceived(const QMQTT::Message & _message)
                     returnMessage(_id,_MESSAGE_SUCCESS);
                 emit signalCheckReportData(&_json_doc);
             }
-            last_mid = _mid;
         }
     }
     else if(_topic.indexOf("status") != -1){
@@ -197,7 +202,10 @@ void SM_CLIENT_MQTT_API::slotCheckStatusData(QJsonDocument *_json_doc)
 //        debug("#4");
 
         machine_status[_array].c_state = true;
-        machine_status[_array].c_status = "ONLINE";
+        if(machine_status[_array].c_status != "ONLINE"){
+            machine_status[_array].c_status = "ONLINE";
+            _flag_update = true;
+        }
 
         if(_status != machine_status[_array].m_status){
            machine_status[_array].m_status = _status;

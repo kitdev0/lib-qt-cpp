@@ -91,6 +91,7 @@ private:
     bool flag_reset_mahine = false;
     uint8_t client_no = 0;
     int16_t last_mid = -1;
+    String last_id = "-1";
     void debug(String data);
     void returnMessage(String _id,String _message);
 
